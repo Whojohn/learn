@@ -1,4 +1,5 @@
 # 数据结构-树
+
 reference:
 
 1. https://algs4.cs.princeton.edu/32bst/
@@ -69,142 +70,99 @@ reference:
 > > 2. 找到该节点的中序遍历的后继节点(右子树最小的节点)，将需要删除节点的值替换为后继节点的值。
 > > 3. 后继节点假如有子节点，那么必须为右子节点，将后继节点的值替换为右子节点的值，移除右节点，将右节点的左右子树变为后继节点的左右子树。
 
+## 2. 树的算法 && 总结
 
-## 2. 树的数据结构实现(leetcode 树实现，不用泛型是因为 leetcode 树官方定义与泛型在细节上不一致，比如泛型需要类型强转等。)
+- 遍历方式的本质
+
+  - 对于非二叉搜索树
+
+    > 递归方式的不同。（前序是自顶向下，然后先左后右。类似的后续是自底向上遍历。）
+
+  - 对于二叉搜索树(同时具备非二叉树的特性)
+
+    > 1. 中序遍历可以获取树的有序列表。
+    > 2. 只有左子树的遍历能够获取到最小值。
+    > 3. 只有右子树的遍历可以获取到最大值。
+    > 4. 第 n **大、小** 的值的获取，中序遍历，第n 次的数值。
+
+- 树的本质是递归 & 图的一种特殊情形
+
+- 递归的底层实现是堆栈
+
+- 树相关算法的优化方式：
+
+  > 1. 剪枝 (额外的条件终止不可能的遍历)
+  > 2. 状态记录 (额外记录已经遍历过的路线，避免多次遍历同样路径的消耗)
+
+### 2.1 leetcode 树实现
+
+> leetcode 树实现，不用泛型是因为 leetcode 树官方定义与泛型在细节上不一致，比如泛型需要类型强转，包装类，上下界问题等。
+
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/TreeNode.java)
+
+### 2.2 树的基本操作
+
+#### 2.2.1 前序遍历
+
+- py 伪代码
+
 ```
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+dfs(root):
+    if root == None: return
+    print root.val
+    self.dfs(root.left)
+    self.dfs(root.right)
+```
 
-/**
- * Leetcode 算法树，
- */
-public class TreeNode {
-    int val;
-    TreeNode left;
-    TreeNode right;
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/TreeNode.java)
 
+#### 2.2.2 中序遍历
 
-    TreeNode(int val) {
-        this.val = val;
-    }
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreeInorderTraversal.java)
 
-    /**
-     * Leetcode 树转换，将数组转换为树。
-     *
-     * @param arr 数组 new Integer[]{1, 2, 3, 4, 5}
-     * @return TreeNode 节点组成的树
-     */
-    public static TreeNode buildTree(Integer[] arr) {
-        TreeNode root;
-        Queue<TreeNode> q = new LinkedList<>();
-        int i = 0;
-        root = arr[i] == null ? null : new TreeNode(arr[i]);
-        q.add(root);
-        i++;
-        while (!q.isEmpty() && i < arr.length) {
-            TreeNode t1 = q.poll();
-            if (t1 != null) {
-                t1.left = arr[i] == null ? null : new TreeNode(arr[i]);
-                q.add(t1.left);
-                i++;
-                if (i >= arr.length) {
-                    break;
-                }
-                t1.right = arr[i] == null ? null : new TreeNode(arr[i]);
-                q.add(t1.right);
-                i++;
-            }
-        }
-        return root;
-    }
+#### 2.2.3 后续遍历
 
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreePostorderTraversal.java)
 
-    /**
-     * 树在某个深度下的最大节点数
-     *
-     * @param step 树深度
-     * @return 总节点数
-     */
-    public int getTwoQuota(int step) {
-        int total = 0;
-        for (int a = 0; a < step; a++) {
-            total += Math.pow(2, a);
-        }
-        return total;
-    }
+### 2.3 Top n/ Min n问题
 
+#### 2.3.1 第二小值
 
-    /**
-     * 树前序遍历输出节点
-     *
-     * @param tree      树
-     * @param nodeValue 节点累计数组
-     * @return int 数组
-     */
-    public List<Integer> readFromFirst(TreeNode tree, List<Integer> nodeValue) {
-        if (tree != null) {
-            nodeValue.add(tree.val);
-            this.readFromFirst(tree.left, nodeValue);
-            this.readFromFirst(tree.right, nodeValue);
-        } else {
-            return nodeValue;
-        }
+> 给定一棵特殊的树， roo.val = min(root.left.val, root.right.val) ，求第二小的节点值
 
-        return nodeValue;
-    }
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SecondMinimumNodeInABinaryTree.java)
 
-    /**
-     * 树中序遍历输出节点
-     *
-     * @param tree      根节点
-     * @param nodeValue 节点累计数组
-     * @return int 数组
-     */
-    public List<Integer> readFromMiddle(TreeNode tree, List<Integer> nodeValue) {
-        if (tree != null) {
-            this.readFromMiddle(tree.left, nodeValue);
-            nodeValue.add(tree.val);
-            this.readFromMiddle(tree.right, nodeValue);
-        } else {
-            return nodeValue;
-        }
-        return nodeValue;
-    }
+### 2.4 树的深度
 
-    public List<TreeNode> readFromMiddle(List<TreeNode> nodes, TreeNode tree) {
-        if (tree != null) {
-            this.readFromMiddle(nodes, tree.left);
-            nodes.add(tree);
-            this.readFromMiddle(nodes, tree.right);
-        } else {
-            return nodes;
-        }
-        return nodes;
-    }
+#### 2.4.1 树的最大深度
 
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MaximunDepthOfBinaryTree.java)
 
-    /**
-     * 后遍历输出节点
-     *
-     * @param tree      根节点
-     * @param nodeValue 节点累计数组
-     * @return int 数组
-     */
-    public List<Integer> readFromLast(TreeNode tree, List<Integer> nodeValue) {
-        if (tree != null) {
-            this.readFromLast(tree.left, nodeValue);
-            this.readFromLast(tree.right, nodeValue);
-            nodeValue.add(tree.val);
-        } else {
-            return nodeValue;
-        }
-        return nodeValue;
-    }
+#### 2.4.2 树的最小深度
 
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MinimumDepthOfBinaryTree.java)
 
-    public TreeNode deleteNode(TreeNode root, int key) {
+#### 2.4.3 求左右子树最大深度和
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/DiameterOfBinaryTree.java)
+
+### 2.5 二叉搜索树
+
+**二叉搜索树如何删除节点：**
+
+> 1. 删除节点为叶子节点，直接去除。
+> 2. 删除节点只有一个子树时，将子树的根节点变为删除节点。
+> 3. 删除节点有两个子树时候：
+>
+> > 1. 找到删除的节点
+> > 2. 找到该节点的中序遍历的后继节点(右子树最小的节点)，将需要删除节点的值替换为后继节点的值。
+> > 3. 后继节点假如有子节点，那么必须为右子节点，将后继节点的值替换为右子节点的值，移除右节点，将右节点的左右子树变为后继节点的左右子树。
+
+#### 2.5.1 二叉搜索树删除
+
+```
+       public TreeNode deleteNode(TreeNode root, int key) {
         if (root == null) {
             return null;
         }
@@ -238,28 +196,55 @@ public class TreeNode {
 
         return root;
     }
-
-    public static void main(String[] args) {
-        TreeNode tree = TreeNode.buildTree(new Integer[]{5, 1, 6, 2, 0, 8, null, null, 7, 4});
-        List<Integer> readFromFirst = tree.readFromFirst(tree, new ArrayList<>());
-        System.out.println("前序遍历");
-        readFromFirst.forEach(e -> System.out.print(e + " "));// 5 1 2 7 0 4 6 8
-        System.out.println();
-
-        List<Integer> readFromMiddle = tree.readFromMiddle(tree, new ArrayList<>());
-        System.out.println("中序遍历");
-        readFromMiddle.forEach(e -> System.out.print(e + " "));// 2 7 1 4 0 5 8 6
-        System.out.println();
-
-        List<Integer> readFromLast = tree.readFromLast(tree, new ArrayList<>());
-        System.out.println("后序遍历");
-        readFromLast.forEach(e -> System.out.print(e + " "));// 7 2 4 0 1 8 6 5
-        System.out.println();
-
-        tree = buildTree(new Integer[]{5, 3, 6, 2, 4, null, 7});
-        tree.deleteNode(tree, 3);
-
+    public List<TreeNode> readFromMiddle(List<TreeNode> nodes,TreeNode tree) {
+        if (tree != null ) {
+            this.readFromMiddle(nodes,tree.left);
+            nodes.add(tree);
+            this.readFromMiddle(nodes,tree.right);
+        } else {
+            return nodes;
+        }
+        return nodes;
     }
-}
 ```
+
+
+
+### 2.6 树的其他问题
+
+#### 2.6.1 二叉树是否为高度平衡树
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BalancedBinaryTree.java)
+
+#### 2.6.2 树翻转
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/InvertBinaryTree.java)
+
+#### 2.6.3 等于某值的路径
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/PathSum.java)
+
+#### 2.6.4 等于某值的路径条数
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/PathSumIii.java)
+
+#### 2.6.5 是否存在特定子树
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SubtreeOfAnotherTree.java)
+
+#### 2.6.6 是否为对称树
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SymmetricTree.java)
+
+
+
+
+
+
+
+
+
+
+
+
 
