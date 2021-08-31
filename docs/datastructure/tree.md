@@ -118,6 +118,7 @@ dfs(root):
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreePreorderTraversal.java)
 
 ##### 2.2.1.1 先序遍历转化树为链表
+
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/FlattenBinaryTreeToLinkedList.java)
 
 #### 2.2.2 中序遍历
@@ -127,6 +128,14 @@ dfs(root):
 #### 2.2.3 后续遍历
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreePostorderTraversal.java)
+
+#### 2.2.4 前序遍历+后续遍历数组恢复树
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConstructBinaryTreeFromPreorderAndInorderTraversal.java)
+
+#### 2.2.5 中序遍历+后续遍历数组恢复树
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConstructBinaryTreeFromInorderAndPostorderTraversal.java)
 
 ### 2.3 Top n/ Min n问题
 
@@ -239,7 +248,9 @@ dfs(root):
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SymmetricTree.java)
 
+#### 2.6.7 数组构建最大树
 
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MaximumBinaryTree.java)
 
 
 
