@@ -10,7 +10,6 @@ public class BinaryTreePreorderTraversal {
      * 树的前序遍历
      * https://leetcode-cn.com/problems/binary-tree-preorder-traversal/
      *
-     *
      * @param root 根节点
      * @return 前序遍历节点值
      */
