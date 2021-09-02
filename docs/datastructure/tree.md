@@ -145,6 +145,10 @@ dfs(root):
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SecondMinimumNodeInABinaryTree.java)
 
+#### 2.3.2 BST min k
+
+- [java 实现 ](https://github.com/Whojohn/learn/commit/657b37e12aac634ed6daf80a037e6116dc2e7899)
+
 ### 2.4 树的深度
 
 #### 2.4.1 树的最大深度
@@ -220,7 +224,21 @@ dfs(root):
     }
 ```
 
+#### 2.5.2 二叉搜索树查找
 
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SearchInABinarySearchTree.java)
+
+#### 2.5.3 二叉搜索树合法检测
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ValidateBinarySearchTree.java)
+
+#### 2.5.4 二叉搜索树 min k
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/KthSmallestElementInABst.java)
+
+####  2.5.5 二叉搜索树转变为累计树
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConvertBstToGreaterTree.java)
 
 ### 2.6 树的其他问题
 
