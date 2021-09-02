@@ -42,6 +42,7 @@ reference:
   
 
 ### 1.2 链表
+- [ 数据结构-链表（详解） ](https://github.com/Whojohn/learn/blob/master/docs/datastructure/linklist.md)
 
 - python（python 原生中只有 deque， deque 底层是双向链表）
 
@@ -203,6 +204,9 @@ public class LinkList<T> {
 
 > 队列是一种先进先出的顺序表，可以用链表和数组实现。
 
+### [数据结构-栈队列（详解） ](https://github.com/Whojohn/learn/blob/master/docs/datastructure/linklist.md)
+
+
 ## 2. 散列表(Hash表，线性表的应用)
 
 ### 2.1 Java 散列表
@@ -227,7 +231,7 @@ public class LinkList<T> {
 
 
 ### 3. 树
-- [ 数据结构-树 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SymmetricTree.java)
+- [ 数据结构-树（详解） ](https://github.com/Whojohn/learn/blob/master/docs/datastructure/tree.md)
 
 
 
