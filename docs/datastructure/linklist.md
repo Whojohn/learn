@@ -92,7 +92,11 @@ public class ListNode {
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/AddTwoNumbersIi.java)
 
-#### 2.1.2 链表是否存在回文
+#### 2.1.2 两数以链表且逆序表达，相加两数
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/AddTwoNumbers.java)
+
+#### 2.1.3 链表是否存在回文
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/PalindromeLinkedList.java)
 
@@ -116,23 +120,29 @@ public class ListNode {
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/MergeTwoSortedLists.java)
 
-#### 2.3.3 删除链表重复节点
+#### 2.3.4 多链表合并
+
+> 二分法
+
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/MergeKSortedLists.java)
+
+#### 2.3.5 删除链表重复节点
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/RemoveDuplicatesFromSortedList.java)
 
-#### 2.3.4 删除链表后n个元素
+#### 2.3.6 删除链表后n个元素
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/RemoveNthNodeFromEndOfList.java)
 
-#### 2.3.5 链表翻转
+#### 2.3.7 链表翻转
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/ReverseLinkedList.java)
 
-#### 2.3.6 翻转链表中特定位置的节点
+#### 2.3.8 翻转链表中特定位置的节点
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/ReverseLinkedListIi.java)
 
-#### 2.3.7 按照k拆分链表
+#### 2.3.9 按照k拆分链表
 
 - [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%93%BE%E8%A1%A8/SplitLinkedListInParts.java)
 
