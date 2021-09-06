@@ -235,5 +235,7 @@ public class LinkList<T> {
 
 
 
+### 4. 字符串
+- [ 数据结构-字符串（详解） ](https://github.com/Whojohn/learn/blob/master/docs/datastructure/string.md)
 
 
