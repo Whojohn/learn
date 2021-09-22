@@ -1,13 +1,14 @@
-
 # HDFS - 基础架构
+
 HDFS 是**文件系统**，它有两大核心**命名空间**，**底层存储(块)**。命名空间只能是`Namenode`  管理和实现。底层存储可以是 `HDFS DistributedFileSystem`(原生实现)，更可以是 `s3`，`oos`等。
 
 > reference:
->1. https://hadoop.apache.org/docs/r3.1.4
->2. https://tech.meituan.com/
->  hdfs 源码解析：
-> 1. Hadoop 2.X HDFS源码剖析 by 徐鹏 (与hdfs 3.x 部分细节不一样，总体思路不变)
-> 2. https://zhangboyi.blog.csdn.net/article/details/111830496 （3.2 源码)
+>
+> 1. https://hadoop.apache.org/docs/r3.1.4
+> 2. https://tech.meituan.com/
+>    hdfs 源码解析：
+> 3. Hadoop 2.X HDFS源码剖析 by 徐鹏 (与hdfs 3.x 部分细节不一样，总体思路不变)
+> 4. https://zhangboyi.blog.csdn.net/article/details/111830496 （3.2 源码)
 
 - 核心存储结构如下
 
@@ -110,7 +111,7 @@ https://hadoop.apache.org/docs/current/api/org/apache/hadoop/fs/FileSystem.html
 
       `Fsimage` 是周期性的命名空间内存快照，`edit log` 是每一个操作的日志。通过内存快照+操作日志回放，可以保证 `NameNode`每一次重启后都能正确恢复状态。并且通过 StandbyNameNode ，周期性整理快照合并操作日志，以提高重启恢复速度。假如`edit log`存在逻辑异常如：File is not under construction 等，可以通过`namenode -recover`跳过异常行恢复。注意！！！ `edit log `的周期整理前提是不存在逻辑异常，假如逻辑异常，会导致快照整理失败，无法启动。以下是一个文件非读产生事务操作的整体流程。
 
-![img](https://img-blog.csdnimg.cn/20200910223643964.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3poYW5nbG9uZ180NDQ0,size_16,color_FFFFFF,t_70)
+![事务触发 Editlog 修改流程](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/editlogWriteProcess.png?raw=true)
 
 - transactionId
 
@@ -171,7 +172,7 @@ https://hadoop.apache.org/docs/current/api/org/apache/hadoop/fs/FileSystem.html
 
 ### 2.1 DataNode 启动过程
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20201105220845558.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3poYW5nbG9uZ180NDQ0,size_16,color_FFFFFF,t_70#pic_center)
+![DataNode 启动过程](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/datanodeStartProcess.png?raw=true)
 
 Datanode将块管理功能切分为两个部分：
 
@@ -282,7 +283,8 @@ datanode 实例互斥文件夹锁
       **注意 datanode 不进行数据校验，只有 client 才进行数据的校验。数据校验失败时，通过 `reportBadBlocks` 告知 `NameNode` 数据损坏。**
 
 ## 3.2 写过程
-![f0dcf8415e94aa01d7ae1809df4b9349.png](en-resource://database/1111:1)
+
+![HDFS 写入流程](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/hdfsWriteProcess.png?raw=true)
 
 1. `Client` 通过调用 `FileSystem.get` 初始化连接器配置并且返回 `FileSystem` 实例化对象 `DistributedFileSystem` 。`DistributedFileSystem.create` 调用 `DFSClient.create`方法检测是否具有操作权限，创建`HdfsDataOutputStream(DFSOutputStream,FSOutputStream 的子类)`实例用于文件写入，并且尝试获取`lease` 返回`HdfsDataOutputStream`实例。
 
@@ -303,10 +305,11 @@ datanode 实例互斥文件夹锁
 
 - 没有收到ack(datanode 掉线)
 
-​     输出流中缓存的没有确认的数据包会重新加入发送队列，这种机制确保了数据节点出现故障时不会丢失任何数据，并且会为数据块申请个新时间戳，防止`datanode`恢复后，集群出现数据不一致。(掉线的datanode上报到namenode，namenode告知最新的时间戳，datanode会删除旧时间戳的数据块)
+  输出流中缓存的没有确认的数据包会重新加入发送队列，这种机制确保了数据节点出现故障时不会丢失任何数据，并且会为数据块申请个新时间戳，防止`datanode`恢复后，集群出现数据不一致。(掉线的datanode上报到namenode，namenode告知最新的时间戳，datanode会删除旧时间戳的数据块)
 
-​     故障数据节点会从输入流管道中删除，通知 Namenode 分配新的数据节点到数据流管道中。接下来输出流会将新分配的 Datanode 添加到数据流管道中，并使用**新的时间戳**重新建立数据流管道。由于新添加的数据节点上并没有存储这个新的数据块，这时 HDFS 客户端会通过 DataTransferProtocol 通知数据流管道中的 Datanode 复制这个数据块到新的 Datanode 上。
+  故障数据节点会从输入流管道中删除，通知 Namenode 分配新的数据节点到数据流管道中。接下来输出流会将新分配的 Datanode 添加到数据流管道中，并使用**新的时间戳**重新建立数据流管道。由于新添加的数据节点上并没有存储这个新的数据块，这时 HDFS 客户端会通过 DataTransferProtocol 通知数据流管道中的 Datanode 复制这个数据块到新的 Datanode 上。
 
 - ack 次数大于等于最小写入数但链中某个datanode 失败
 
-​    调用链中某个`datanode` 掉线，只会剔除该节点，**更新块时间戳**，不会进行重试，总副本数由`Namenode`进行保障。
+  调用链中某个`datanode` 掉线，只会剔除该节点，**更新块时间戳**，不会进行重试，总副本数由`Namenode`进行保障。
+

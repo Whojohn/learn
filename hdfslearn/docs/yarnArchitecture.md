@@ -6,11 +6,11 @@
 
 Hadoop 中 RPC 流向如下图（箭头指向server 端）
 
-![img](https://img-blog.csdnimg.cn/20181107091512467.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2M5Mjk4MzM2MjNsdmNoYQ==,size_16,color_FFFFFF,t_70)
+![Hadoop 中 RPC 流向如下图（箭头指向server 端）](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/yarnRpc.png?raw=true)
 
 
 
-![MapReduce NextGen Architecture](https://hadoop.apache.org/docs/r3.1.4/hadoop-yarn/hadoop-yarn-site/yarn_architecture.gif)
+![Yarn架构](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/yarnArchitecture.gif?raw=true)
 
 ## 1. Yarn 工作流程
 
