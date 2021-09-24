@@ -25,31 +25,31 @@
 
 #### 2.1.1 组成字符串的字符及数量是否相同
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/ValidAnagram.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/ValidAnagram.java)
 
 #### 2.1.2 二进制串中连续字符子串最大长度
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/CountBinarySubstrings.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/CountBinarySubstrings.java)
 
 #### 2.1.3 字符串匹配首次出现位置 （indexof 手动实现）
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/ImplementStrstr.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/ImplementStrstr.java)
 
 #### 2.1.4 字符串是否同构(两字符串间字符映射是否唯一)
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/IsomorphicStrings.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/IsomorphicStrings.java)
 
 #### 2.1.5 a 串多次复制自身是否能组成 b
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/RepeatedStringMatch.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/RepeatedStringMatch.java)
 
 #### 2.1.6 旋转字符串
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/RotateString.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/RotateString.java)
 
 #### 2.1.7 字符串b 是否能够通过a 轮转获得
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/StringRotationLcci.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/StringRotationLcci.java)
 
 ## 2.2 回文串
 
@@ -79,20 +79,20 @@
 
 #### 2.2.1 字符串自由组合最长回文串
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/LongestPalindrome.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/LongestPalindrome.java)
 
 #### 2.2.2 最长回文子串（字符串中字串是否是回文的判定方法）
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/LongestPalindromicSubstring.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/LongestPalindromicSubstring.java)
 
 #### 2.2.3 数字是否是回文串
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/PalindromeNumber.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/PalindromeNumber.java)
 
 #### 2.2.4 回文子串总数（字符串中字串是否是回文的判定方法）
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/PalindromicSubstrings.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/PalindromicSubstrings.java)
 
 #### 2.2.5 字符串头添加最少的字符以实现回文 (回文串翻转等于自身)
 
-- [java 实现 ](https://github.com/Whojohn/learn/tree/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/ShortestPalindrome.java)
+- [java 实现 ](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%AD%97%E7%AC%A6%E4%B8%B2/ShortestPalindrome.java)

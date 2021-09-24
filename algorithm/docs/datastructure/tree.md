@@ -99,7 +99,7 @@ reference:
 > leetcode 树实现，不用泛型是因为 leetcode 树官方定义与泛型在细节上不一致，比如泛型需要类型强转，包装类，上下界问题等。
 
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/TreeNode.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/TreeNode.java)
 
 ### 2.2 树的基本操作
 
@@ -115,27 +115,27 @@ dfs(root):
     self.dfs(root.right)
 ```
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreePreorderTraversal.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreePreorderTraversal.java)
 
 ##### 2.2.1.1 先序遍历转化树为链表
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/FlattenBinaryTreeToLinkedList.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/FlattenBinaryTreeToLinkedList.java)
 
 #### 2.2.2 中序遍历
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreeInorderTraversal.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreeInorderTraversal.java)
 
 #### 2.2.3 后续遍历
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreePostorderTraversal.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BinaryTreePostorderTraversal.java)
 
 #### 2.2.4 前序遍历+后续遍历数组恢复树
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConstructBinaryTreeFromPreorderAndInorderTraversal.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConstructBinaryTreeFromPreorderAndInorderTraversal.java)
 
 #### 2.2.5 中序遍历+后续遍历数组恢复树
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConstructBinaryTreeFromInorderAndPostorderTraversal.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConstructBinaryTreeFromInorderAndPostorderTraversal.java)
 
 ### 2.3 Top n/ Min n问题
 
@@ -143,7 +143,7 @@ dfs(root):
 
 > 给定一棵特殊的树， roo.val = min(root.left.val, root.right.val) ，求第二小的节点值
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SecondMinimumNodeInABinaryTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SecondMinimumNodeInABinaryTree.java)
 
 #### 2.3.2 BST min k
 
@@ -153,15 +153,15 @@ dfs(root):
 
 #### 2.4.1 树的最大深度
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MaximunDepthOfBinaryTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MaximunDepthOfBinaryTree.java)
 
 #### 2.4.2 树的最小深度
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MinimumDepthOfBinaryTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MinimumDepthOfBinaryTree.java)
 
 #### 2.4.3 求左右子树最大深度和
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/DiameterOfBinaryTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/DiameterOfBinaryTree.java)
 
 ### 2.5 二叉搜索树
 
@@ -226,49 +226,49 @@ dfs(root):
 
 #### 2.5.2 二叉搜索树查找
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SearchInABinarySearchTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SearchInABinarySearchTree.java)
 
 #### 2.5.3 二叉搜索树合法检测
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ValidateBinarySearchTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ValidateBinarySearchTree.java)
 
 #### 2.5.4 二叉搜索树 min k
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/KthSmallestElementInABst.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/KthSmallestElementInABst.java)
 
 ####  2.5.5 二叉搜索树转变为累计树
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConvertBstToGreaterTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/ConvertBstToGreaterTree.java)
 
 ### 2.6 树的其他问题
 
 #### 2.6.1 二叉树是否为高度平衡树
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BalancedBinaryTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/BalancedBinaryTree.java)
 
 #### 2.6.2 树翻转
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/InvertBinaryTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/InvertBinaryTree.java)
 
 #### 2.6.3 等于某值的路径
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/PathSum.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/PathSum.java)
 
 #### 2.6.4 等于某值的路径条数
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/PathSumIii.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/PathSumIii.java)
 
 #### 2.6.5 是否存在特定子树
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SubtreeOfAnotherTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SubtreeOfAnotherTree.java)
 
 #### 2.6.6 是否为对称树
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SymmetricTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/SymmetricTree.java)
 
 #### 2.6.7 数组构建最大树
 
-- [java 实现 ](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MaximumBinaryTree.java)
+- [java 实现 ](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%91/MaximumBinaryTree.java)
 
 
 

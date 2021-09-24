@@ -42,26 +42,26 @@ System.out.println(temp.pollFirst());
 
 ### 2.2 算法
 #### 2.2.1 栈模拟队列
-- [java](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/ImplementQueueUsingStacks.java)
+- [java](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/ImplementQueueUsingStacks.java)
 
 #### 2.2.2 用队列实现栈
-- [java](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/ImplementStackUsingQueues.java)
+- [java](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/ImplementStackUsingQueues.java)
 
 #### 2.2.3 最小栈
 > 通过维护源数据栈和当前数据位的最小栈，o(1) 获得当前栈中最小的元素
 
-- [java](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/MinStack.java)
+- [java](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/MinStack.java)
 
 #### 2.2.4  字符串合法性判定
 
-- [java](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/ValidParentheses.java)
+- [java](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/ValidParentheses.java)
 
 #### 2.2.5 最近温度上升的日期间隔
 > 通过维护数组下标栈，遍历判定历史温度。
 
-- [java](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/DailyTemperatures.java)
+- [java](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/DailyTemperatures.java)
 
 #### 2.2.6 每一个元素的下一个最大元素
 > 类似 DailyTemperatures 最近温度上升的日期间隔;通过维护数组下标栈，遍历判定历史温度。
 
-- [java](https://github.com/Whojohn/learn/blob/master/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/NextGreaterElementIi.java)
+- [java](https://github.com/Whojohn/learn/blob/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%A0%88%E9%98%9F%E5%88%97/NextGreaterElementIi.java)
