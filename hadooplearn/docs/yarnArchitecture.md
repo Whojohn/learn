@@ -6,14 +6,14 @@
 
 Hadoop 中 RPC 流向如下图（箭头指向server 端）
 
-![Hadoop 中 RPC 流向如下图（箭头指向server 端）](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/yarnRpc.png?raw=true)
+![Hadoop 中 RPC 流向如下图（箭头指向server 端）](https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/pic/yarnRpc.png?raw=true)
 
 
 
-![Yarn 架构](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/yarnArchitecture.gif?raw=true)
+![Yarn 架构](https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/pic/yarnArchitecture.gif?raw=true)
 
 
-![ResourceManger 架构](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/ResourceManager.svg?raw=true)
+![ResourceManger 架构](https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/pic/ResourceManager.svg?raw=true)
 
 ## 1. Yarn 工作流程
 
@@ -162,7 +162,7 @@ Hadoop 中 RPC 流向如下图（箭头指向server 端）
 
 > reference:
 >
-> drf论文：  https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/nsdi_drf.pdf
+> drf论文：  https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/nsdi_drf.pdf
 
 - 优点：
 

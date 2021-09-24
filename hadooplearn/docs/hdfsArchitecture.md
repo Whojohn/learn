@@ -111,7 +111,7 @@ https://hadoop.apache.org/docs/current/api/org/apache/hadoop/fs/FileSystem.html
 
       `Fsimage` 是周期性的命名空间内存快照，`edit log` 是每一个操作的日志。通过内存快照+操作日志回放，可以保证 `NameNode`每一次重启后都能正确恢复状态。并且通过 StandbyNameNode ，周期性整理快照合并操作日志，以提高重启恢复速度。假如`edit log`存在逻辑异常如：File is not under construction 等，可以通过`namenode -recover`跳过异常行恢复。注意！！！ `edit log `的周期整理前提是不存在逻辑异常，假如逻辑异常，会导致快照整理失败，无法启动。以下是一个文件非读产生事务操作的整体流程。
 
-![事务触发 Editlog 修改流程](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/editlogWriteProcess.png?raw=true)
+![事务触发 Editlog 修改流程](https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/pic/editlogWriteProcess.png?raw=true)
 
 - transactionId
 
@@ -172,7 +172,7 @@ https://hadoop.apache.org/docs/current/api/org/apache/hadoop/fs/FileSystem.html
 
 ### 2.1 DataNode 启动过程
 
-![DataNode 启动过程](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/datanodeStartProcess.png?raw=true)
+![DataNode 启动过程](https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/pic/datanodeStartProcess.png?raw=true)
 
 Datanode将块管理功能切分为两个部分：
 
@@ -286,7 +286,7 @@ datanode 实例互斥文件夹锁
 
 ## 3.2 写过程
 
-![HDFS 写入流程](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/hdfsWriteProcess.png?raw=true)
+![HDFS 写入流程](https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/pic/hdfsWriteProcess.png?raw=true)
 
 1. `Client` 通过调用 `FileSystem.get` 初始化连接器配置并且返回 `FileSystem` 实例化对象 `DistributedFileSystem` 。`DistributedFileSystem.create` 调用 `DFSClient.create`方法检测是否具有操作权限，创建`HdfsDataOutputStream(DFSOutputStream,FSOutputStream 的子类)`实例用于文件写入，并且尝试获取`lease` 返回`HdfsDataOutputStream`实例。
 
