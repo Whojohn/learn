@@ -10,7 +10,10 @@ Hadoop 中 RPC 流向如下图（箭头指向server 端）
 
 
 
-![Yarn架构](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/yarnArchitecture.gif?raw=true)
+![Yarn 架构](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/yarnArchitecture.gif?raw=true)
+
+
+![ResourceManger 架构](https://github.com/Whojohn/learn/blob/master/hdfslearn/docs/pic/ResourceManager.svg?raw=true)
 
 ## 1. Yarn 工作流程
 
