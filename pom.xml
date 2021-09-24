@@ -9,7 +9,7 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>hdfslearn</module>
+        <module>hadooplearn</module>
     </modules>
     <properties>
         <java.version>1.8</java.version>
