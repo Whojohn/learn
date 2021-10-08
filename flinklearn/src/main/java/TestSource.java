@@ -1,6 +1,5 @@
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
@@ -14,17 +13,17 @@ public class TestSource extends RichParallelSourceFunction<Tuple2<Long, Long>> {
     @Override
     public void run(SourceContext<Tuple2<Long, Long>> ctx) throws Exception {
         int cou = 1;
-        Tuple2 tempTuple = new Tuple2();
+        Tuple2<Long, Long> tempTuple = new Tuple2<>();
         Long[] timeSource = new Long[]{
-                1632981239000l,
-                1632981240000l,
-                1632981243000l,
-                1632981247000l,
-                1632981249000l,
-                1632981259000l,
-                1632981249000l};
+                1632981239000L,
+                1632981240000L,
+                1632981243000L,
+                1632981247000L,
+                1632981249000L,
+                1632981259000L,
+                1632981249000L};
         for (Long each : timeSource) {
-            tempTuple.setFields(new Long(cou), each);
+            tempTuple.setFields((long) cou, each);
             ctx.collect(tempTuple);
             System.out.println("source output:" + each);
             Thread.sleep(3000);
@@ -40,15 +39,14 @@ public class TestSource extends RichParallelSourceFunction<Tuple2<Long, Long>> {
         }
     }
 
+
     @Override
     public void cancel() {
 
     }
 
     public static void main(String[] args) throws Exception {
-        org.apache.flink.configuration.Configuration conf = new Configuration();
-        conf.setBoolean("rest.flamegraph.enabled", true);
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(1, conf);
+        StreamExecutionEnvironment env = TestUtil.iniEnv(2);
         env.getConfig().setAutoWatermarkInterval(10000L);
         env.addSource(new TestSource()).assignTimestampsAndWatermarks(
                 WatermarkStrategy
