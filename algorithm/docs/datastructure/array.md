@@ -80,3 +80,7 @@
 
 - [java](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%95%B0%E7%BB%84/ToeplitzMatrix.java)
 
+  
+### 2.4 dfs/bfs && 状态量/剪枝做法
+- [java](https://github.com/Whojohn/learn/tree/master/algorithm/src/main/java/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%95%B0%E7%BB%84/MinimunPathSum.java)
+
