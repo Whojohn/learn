@@ -59,12 +59,12 @@ reference:
       如图2所示，同一job内`task`共享一个slot，即使`task`之间是无法算子链接，这意味着一个slot内线程数与并发度和`sub-task`个数（task线程数）有关。
 
 
-- 逻辑执行图
+- JobGraph图(只考虑job chain 不考虑 slot share)
 
 ![ExecutionGraph](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap2-tasks_chains.svg?raw=true)
 
-### 
-
+ 
+- ExecutionGraph 图
 - 没有slot 共享的物理执行图
 ![TaskManagers without shared Task Slots](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap2-tasks_slots.svg?raw=true)
 

@@ -7,7 +7,13 @@
       Flink source就是 `DataStream`的源头，   `operator` 操作会把输入的`DataStreams` 转化为一个或多个其他`stream`。其中`DataStream` 子类有： `SingleOutputStreamOperator`，`IterativeStream`， `KeyedStream`，`DataStreamSource` 等。`operator`  通过 `stream` 的函数进行调用。
 
 **源码 Stream路径 ：org.apache.flink.streaming.api.datastream，以下列举常见 stream **
+![stream流源码路径](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-stream.png?raw=true)
 
+**stream类**
+![stream分类](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-stream(%E6%8A%BD%E8%B1%A1%E6%A6%82%E5%BF%B5%E7%9A%84stream).svg?raw=true)
+
+**operator总览**
+![operator总览](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-operator.svg?raw=true)
 
 - DataStream
 
@@ -64,7 +70,11 @@
 
 > connect 连接的两个数据类型不一样的流产生的流
 
-### 1.1.2 自定义操作函数使用
+### 1.1.2 自定义操作函数使用(ProcessFunction及其子类应用)
+
+```
+
+```
 
 > 对于没有预定义操作的函数，必须传入lambda 表达式式或者实体类。其中自定义操作函数有 xxxFunction 接口，RichxxxFunction 接口两种。其中 Rich 与 普通实现相比增加以下方法：
 >

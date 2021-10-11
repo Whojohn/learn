@@ -15,7 +15,6 @@
 1. compile
 
    > 打包包含依赖，默认配置。
-
 2. test
 
 > 依赖仅仅用于测试，一般打包不包含，可选。
@@ -43,7 +42,7 @@
 - maven 版本冲突解决方法
 1. exclude 依赖(较麻烦)
 2. 版本锁定（如下）
-````
+```
 
 <dependencyManagement>
     <dependency>
@@ -52,6 +51,7 @@
         <version>4.0.1</version>
     </dependency></dependencyManagement>
 ```
+
 3. maven shade 重新打包源码
 
 
@@ -63,7 +63,7 @@
 1.  解决 SPI 文件 maven 不能追加问题。
 2.  打包打出fat jar 。
 
-​    **Flink connector 的加载是通过 SPI 实现的(jdbc 等加载也是通过 SPI 实现的)，默认maven 打包机制，会覆盖掉 SPI 声明文件 **。即： resource/META-INF.services 只能保留同一个工厂方法的声明文件。如： kafka , es ,hive 等同时使用，打包后只能使用一个连接器，其他连接器类找不到。**解决方法是利用 maven 的 org.apache.maven.plugins.shade.resource.AppendingTransformer**。
+    **Flink connector 的加载是通过 SPI 实现的(jdbc 等加载也是通过 SPI 实现的)，默认maven 打包机制，会覆盖掉 SPI 声明文件 **。即： resource/META-INF.services 只能保留同一个工厂方法的声明文件。如： kafka , es ,hive 等同时使用，打包后只能使用一个连接器，其他连接器类找不到。**解决方法是利用 maven 的 org.apache.maven.plugins.shade.resource.AppendingTransformer**。
 
 ```
     <build>
@@ -122,7 +122,7 @@
 1.  本地 web ui，可选 rest 地址。
 2.  idea 输出日志，可选 debug 日志。
 
-​       Flink 能够自动判定环境，启动对应的集群。本地使用的时候 minicluster 模式，本地启动需要以下这些依赖，才能显示 Flink web ui，debug日志。**注意idea启动时候，必须勾选 include dependence with "Provided" scope。**
+       Flink 能够自动判定环境，启动对应的集群。本地使用的时候 minicluster 模式，本地启动需要以下这些依赖，才能显示 Flink web ui，debug日志。**注意idea启动时候，必须勾选 include dependence with "Provided" scope。**
 
 ```
         <!-- 不能去掉，去掉本地测试无法启动，旧版官网1.10以前是有这个依赖，新版没了，没了后果就是无法本地运行，通过provided控制不打包-->
@@ -161,7 +161,7 @@
 
 # 4 Windows 调试
 
-​      windows 调试最大问题是需要解决 hadoop 依赖(简单使用，hadoop client 即可，涉及到 hive 多集群读写等需要配置windows hadoop依赖)，hadoop native 依赖。
+      windows 调试最大问题是需要解决 hadoop 依赖(简单使用，hadoop client 即可，涉及到 hive 多集群读写等需要配置windows hadoop依赖)，hadoop native 依赖。
 
 - windows 配置hadoop 依赖(略)
 - flink 集群不依赖 hadoop_home 加载 hadoop native 方法
@@ -201,7 +201,7 @@ public final class NativeCodeLoader {
   }
 ```
 
-​     **System.loadLibrary("hadoop")，这里只有检查，该类没有任何初始化该值的方法。并且，该读取方法限制必须在jvm启动前把 native 相关路径记载到jvm 环境中。**
+     **System.loadLibrary("hadoop")，这里只有检查，该类没有任何初始化该值的方法。并且，该读取方法限制必须在jvm启动前把 native 相关路径记载到jvm 环境中。**
 
 方法1：修改 taskmanger ，jobmanager 启动脚本-Djava.library.path=xxx(hadoop native 地址)
 
