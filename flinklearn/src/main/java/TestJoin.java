@@ -91,6 +91,7 @@ public class TestJoin {
                                 .withIdleness(Duration.ofSeconds(5))
                 );
 
+
         names = new String[]{"eve_time", "order", "info"};
         types = new TypeInformation[]{Types.LONG, Types.STRING, Types.STRING};
         DataStream<Row> orderInfo = env.addSource(new TestSource("order info", buildOrderInfo()))
@@ -101,7 +102,7 @@ public class TestJoin {
                                 .withTimestampAssigner((event, pre) -> (long) event.getField(0))
                                 .withIdleness(Duration.ofSeconds(5))
                 );
-
+        order.map()
         order.join(orderInfo)
                 .where(
                         e -> e.getField(1)
