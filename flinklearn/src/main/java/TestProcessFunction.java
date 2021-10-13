@@ -68,7 +68,7 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
         // 以f1 进行分组，进行 count 累加
         temp.f0 = (temp.f0 == null ? value.f1 : temp.f0);
         temp.f1 = (temp.f1 == null ? 0 : temp.f1) + 1;
-
+        sum.clear();
         sum.update(temp);
         out.collect(temp);
     }

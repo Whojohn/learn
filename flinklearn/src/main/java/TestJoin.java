@@ -102,7 +102,6 @@ public class TestJoin {
                                 .withTimestampAssigner((event, pre) -> (long) event.getField(0))
                                 .withIdleness(Duration.ofSeconds(5))
                 );
-        order.map()
         order.join(orderInfo)
                 .where(
                         e -> e.getField(1)
