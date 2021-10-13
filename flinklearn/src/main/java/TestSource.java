@@ -24,7 +24,7 @@ public class TestSource extends RichParallelSourceFunction<Row> {
         for (Row each : this.source) {
             System.out.println(sourceName + " output:" + each.toString());
             ctx.collect(each);
-            Thread.sleep(5000);
+            Thread.sleep(10000);
         }
 
         Thread.sleep(10000);
@@ -41,4 +41,5 @@ public class TestSource extends RichParallelSourceFunction<Row> {
     public void cancel() {
         this.label = false;
     }
+
 }

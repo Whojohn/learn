@@ -28,7 +28,7 @@ public class TestUtil {
         conf.setBoolean("rest.flamegraph.enabled", true);
         conf.setInteger(RestOptions.PORT, 8082);
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(parall, conf);
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         env.enableCheckpointing(10000);
         // 新版api 标识了 memory 状态量会被移除的信息，改用以下方式进行调用
