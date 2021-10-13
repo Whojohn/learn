@@ -42,23 +42,23 @@ public class TestWaterMarkAndTimestamp {
 
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = TestUtil.iniEnv(1);
-        env.getConfig().setAutoWatermarkInterval(10000L);
 
         String[] names = new String[]{"eve_time", "message"};
         TypeInformation[] types = new TypeInformation[]{Types.LONG, Types.STRING};
 
-
-        env.addSource(new TestSource("TestWaterMarkAndTimestamp", buildRow())).returns(Types.ROW_NAMED(names, types)).assignTimestampsAndWatermarks(
-                WatermarkStrategy
-                        .<Row>forGenerator(WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(0)))
-                        .withTimestampAssigner((event, pre) -> (long) event.getField(0))
-                        .withIdleness(Duration.ofSeconds(5))
-        )
+        env.addSource(new TestSource("TestWaterMarkAndTimestamp", buildRow()))
+                .returns(Types.ROW_NAMED(names, types))
+                .assignTimestampsAndWatermarks(
+                        WatermarkStrategy
+                                .<Row>forGenerator(WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(0)))
+                                .withTimestampAssigner((event, pre) -> (long) event.getField(0))
+                                .withIdleness(Duration.ofSeconds(5))
+                )
                 .keyBy(e -> e.getField(1))
                 .window(TumblingEventTimeWindows.of(Time.seconds(10)))
                 .allowedLateness(Time.seconds(0))
-                // 这里用null 是因为分区把每一个元素都分为独立的一个区，所以reduce 相当于无效，没有任何作用，可以 把流转化为 SingleOutputStreamOperator 以查看 windows 中的数据
-                .reduce((value1, value2) -> null)
+                // 因为 keyed 字段数据都是唯一，所以reduce 相当于支持输出
+                .reduce((a, b) -> a)
                 .print();
         env.execute();
     }
