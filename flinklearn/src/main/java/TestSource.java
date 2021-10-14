@@ -31,6 +31,7 @@ public class TestSource extends RichParallelSourceFunction<Row> implements Check
 
     @Override
     public void run(SourceContext<Row> ctx) throws Exception {
+
         int signal = 0;
         while (signal < this.sourceLocBuffer.size()) {
             signal = 0;
@@ -38,10 +39,12 @@ public class TestSource extends RichParallelSourceFunction<Row> implements Check
                 int nowStep = this.sourceLocBuffer.get(a);
                 if (nowStep < this.source.size()) {
                     System.out.println(sourceName + " output:" + this.source.get(nowStep).toString());
-                    ctx.collect(this.source.get(nowStep));
-                    Thread.sleep(10000);
-                    nowStep += 1;
-                    this.sourceLocBuffer.set(a, nowStep);
+                    synchronized (ctx.getCheckpointLock()) {
+                        ctx.collect(this.source.get(nowStep));
+                        Thread.sleep(10000);
+                        nowStep += 1;
+                        this.sourceLocBuffer.set(a, nowStep);
+                    }
                 } else {
                     signal += 1;
                 }
