@@ -501,7 +501,7 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
 
    >  cleanupIncrementally (只对 memory 后端有效)
    >
-   > 假如 memory 后端配置为同步写入时候，由于同步写入禁止并发，会导致内存使用增长(会保留所有数据，删除无效)。
+   >  假如 memory 后端配置为同步写入时候，由于同步写入禁止并发，会导致内存使用增长(会保留所有数据，删除无效)。
 
 3. RocksDB 专用删除：cleanupInRocksdbCompactFilter
 
@@ -536,8 +536,8 @@ TtlMapState.get -> TtlMapState.getWrapped  -> getWrappedWithTtlCheckAndUpdate �
         TtlValue<UV> ttlValue = getWrapped(key);
         return ttlValue == null ? null : ttlValue.getUserValue();
     }
-    
-    
+
+
     private TtlValue<UV> getWrapped(UK key) throws Exception {
         accessCallback.run(); //是一个回调对象，增删改查操作之前都需要执行accessCallback.run()方法。如果启用了增量清理策略，该Runnable会通过在状态数据上维护一个全局迭代器向前清理过期数据。如果未启用增量清理策略，accessCallback为空。TtlStateFactory.registerTtlIncrementalCleanupCallback 工厂初始化该变量。
         return getWrappedWithTtlCheckAndUpdate(
@@ -585,6 +585,73 @@ TtlMapState.get -> TtlMapState.getWrapped  -> getWrappedWithTtlCheckAndUpdate �
         state.clear();
     }
 ```
+
+## 3. State 查询
+
+### 3.1 Queryable State 接口
+
+> 通过queryable state 可以实时的监控state ，**但是这不是一个稳定的接口，1.13.2 官网demo 一直无法跑起来，无论是使用stream 声明方式，还是 state 声明方式。**并且该方法只能查询，无法修改状态量。
+
+
+- 集群配置打开可查询状态
+
+> queryable-state.enable ： true
+
+- 声明状态可查询方式：
+
+  ·1. Stream 中声明(**声明该流可以查询后不能继续进行任何算子处理，该方法也不支持ListState**)
+
+  ```
+  stream.keyBy(value -> value.f0).asQueryableState("query-name")
+  ```
+
+         2. StateDescriptor 中声明（没有任何限制）
+
+```
+ValueStateDescriptor<Tuple2<Long, Long>> descriptor =
+        new ValueStateDescriptor<>(
+                "average", // the state name
+                TypeInformation.of(new TypeHint<Tuple2<Long, Long>>() {})); // type information
+descriptor.setQueryable("query-name"); // queryable state name
+```
+
+- 查询代码
+
+```
+       String tmHostname = "test";
+        int proxyPort = 9069;
+        JobID jobID = JobID.fromHexString("c5f1d83590b0d7f092af5f88d27f294a");
+
+        QueryableStateClient client = new QueryableStateClient(tmHostname, proxyPort);
+
+        // the state descriptor of the state to be fetched.
+        ValueStateDescriptor<Tuple2<Long, Long>> descriptor =
+                new ValueStateDescriptor<>(
+                        "query-name",
+                        TypeInformation.of(new TypeHint<Tuple2<Long, Long>>() {
+                        })
+                );
+
+        CompletableFuture<ValueState<Tuple2<Long, Long>>> resultFuture =
+                client.getKvState(jobID, "query-name", 6L, BasicTypeInfo.LONG_TYPE_INFO, descriptor);
+
+        // now handle the returned value
+        resultFuture.thenAccept(response -> {
+            try {
+                Tuple2<Long, Long> res = response.value();
+                System.out.println("aaa");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        resultFuture.get();
+```
+
+
+
+### 3.2 State Processor API
+
+> State Processor API 无法实时读取 `state`，但是可以以`batch`的方式读取、修改 `checkpoint`,`savapoint`。
 
 
 
