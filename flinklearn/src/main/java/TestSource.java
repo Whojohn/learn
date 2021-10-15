@@ -39,9 +39,10 @@ public class TestSource extends RichParallelSourceFunction<Row> implements Check
                 int nowStep = this.sourceLocBuffer.get(a);
                 if (nowStep < this.source.size()) {
                     System.out.println(sourceName + " output:" + this.source.get(nowStep).toString());
+                    // checkpoint lock 保证操作原子和数据正确
                     synchronized (ctx.getCheckpointLock()) {
                         ctx.collect(this.source.get(nowStep));
-                        Thread.sleep(10000);
+                        Thread.sleep(4000);
                         nowStep += 1;
                         this.sourceLocBuffer.set(a, nowStep);
                     }
@@ -73,10 +74,16 @@ public class TestSource extends RichParallelSourceFunction<Row> implements Check
         }
     }
 
+    /***
+     * checkpoint 相关初始化
+     * @param functionInitializationContext
+     * @throws Exception
+     */
     @Override
     public void initializeState(FunctionInitializationContext functionInitializationContext) throws Exception {
         ListStateDescriptor<Integer> source = new ListStateDescriptor<>("sourceState", Integer.class);
         this.sourceLoc = functionInitializationContext.getOperatorStateStore().getListState(source);
+        // 判定是否恢复，假如是从状态量恢复，从状态量中读取数据
         if (functionInitializationContext.isRestored()) {
             for (Integer each : this.sourceLoc.get()) {
                 sourceLocBuffer.add(each);

@@ -26,12 +26,15 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
         cou = 0;
         ValueStateDescriptor<Tuple2<Long, Long>> descriptor =
                 new ValueStateDescriptor<>(
-                        "average", // state 逻辑名字
+                        "agg", // state 逻辑名字
                         TypeInformation.of(new TypeHint<Tuple2<Long, Long>>() {
                         }) // 数据类型信息
                 );
+        // 用于 state 查询
+        descriptor.setQueryable("process-state");
         // 绑定本地 state
         sum = getRuntimeContext().getState(descriptor);
+
     }
 
     /**
