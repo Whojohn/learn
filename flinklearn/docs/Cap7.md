@@ -1,326 +1,227 @@
-# Flink-7-双流join
+# Flink-6-窗口
 
-   **至今 `Flink` 只支持 innner join 和 left join, 无论是 sql api 还是 stream api，无论是哪种join 底层都是基于`CoGroupFunction `实现。** Flink从数据划分又分为：Window Join（窗口连接）和Interval Join（时间间隔连接）;
+> - 注意
+>
+>   **时间戳在flink 内部以 ms 为单位，unix timestamp 作为基础单位。因此，使用时候要注意时区的影响。比如使用 Tumbling 窗口，中国时间必须处理才能使数据开窗规则为中国自然日。**
 
-- stream inner join 语法
+      窗口将流拆分为有限的桶。窗口内的数据会按照用户逻辑计算，stream 定期生成窗口这样就能达到：每5分钟统计一次pv uv 等维度统计。
 
-```
-stream.join(otherStream)
-    .where(<KeySelector>)      //stream 使用哪个字段作为Key
-    .equalTo(<KeySelector>)    //otherStream 使用哪个字段作为Key
-    .window(<WindowAssigner>)
-    .apply(<JoinFunction>)
-```
-
-- stream left join 语法(用**CoGroup** 实现，**CoGroup** 能够将双流同key合并成一个分组，假如有一侧流不存在key，也会保留下key，实现了left join的功能)
+## 1.1 窗口语法
 
 ```
-dataStream.coGroup(otherStream)
-    .where(0)
-    .equalTo(1)
-    .window(TumblingEventTimeWindows.of(Time.seconds(3)))
-    .apply (new CoGroupFunction () {...});
-    
-```
+- keyed stream
+stream
+       .keyBy(...)               <-  keyed versus non-keyed windows
+       .window(...)              <-  required: "assigner"
+      [.trigger(...)]            <-  optional: "trigger" (else default trigger)
+      [.evictor(...)]            <-  optional: "evictor" (else no evictor)
+      [.allowedLateness(...)]    <-  optional: "lateness" (else zero)
+      [.sideOutputLateData(...)] <-  optional: "output tag" (else no side output for late data)
+       .reduce/aggregate/apply()      <-  required: "function"
+      [.getSideOutput(...)]      <-  optional: "output tag"
+      
+      
+- non-keyed stream(注意，该窗口并发度只能为1，会引发性能问题)
 
-## 1.1 Window join
-
-    代码样例用 `inner join` 进行说明。其中window 可以用预定义 window: tumbling , sliding，session；**也可以自定义WindowAssigner，并且自定义对应的 窗口相关的：trigger，evictor 等。**
-
-   以下代码以 tumbling  窗口为例，每间隔 `5s` 开窗口
-
-```
-//  生成数据代码
-import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
-import org.apache.flink.types.Row;
-
-import java.util.List;
-
-public class TestSource extends RichParallelSourceFunction<Row> {
-    private boolean label = true;
-    private final String sourceName;
-    private final List<Row> source;
-
-    /**
-     * 必须传入一个 list 包裹的row 才能模拟数据
-     *
-     * @param sourceName
-     * @param source
-     */
-    public TestSource(String sourceName, List<Row> source) {
-        this.sourceName = sourceName;
-        this.source = source;
-    }
-
-    @Override
-    public void run(SourceContext<Row> ctx) throws Exception {
-        for (Row each : this.source) {
-            System.out.println(sourceName + " output:" + each.toString());
-            ctx.collect(each);
-            Thread.sleep(5000);
-        }
-
-        Thread.sleep(10000);
-        // ctx.collect 方法也有空闲检测，但是没有开放给用户，因此 source 中只能markAsTemporarilyIdle 显式声明告知watermark 此流空闲，生成watermark 不需要等待该流，防止并发流下堵塞
-        // 或者通过 WatermarkStrategy.withIdleness 配置，生成全局watermark 时忽略一段时间没有改变的watermark。
-        ctx.markAsTemporarilyIdle();
-
-        while (this.label) {
-            Thread.sleep(3000);
-        }
-    }
-
-    @Override
-    public void cancel() {
-        this.label = false;
-    }
-}
-```
-
-- join 代码
-
-```
-import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.JoinFunction;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.common.typeinfo.Types;
-import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
-import org.apache.flink.types.Row;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-public class TestJoin {
-
-    public static List<Row> buildOrder() {
-        List<Long> timestamp = Arrays.asList(1632981239000L,
-                1632981240000L,
-                1632981243000L,
-                1632981247000L,
-                1632981249000L,
-                1632981259000L,
-                1632981249000L);
-        List<String> order = Arrays.asList("1001",
-                "1002",
-                "1004",
-                "1003",
-                "1005",
-                "1006",
-                "1007");
-        List<Row> source = new ArrayList<>();
-        for (int a = 0; a < timestamp.size(); a++) {
-            Row each = new Row(2);
-            each.setField(0, timestamp.get(a));
-            each.setField(1, order.get(a));
-            source.add(each);
-        }
-        return source;
-    }
-
-    public static List<Row> buildOrderInfo() {
-        List<Long> timestamp = Arrays.asList(1632981239000L,
-                1632981242000L,
-                1632981244000L,
-                1632981231000L,
-                1632981249000L,
-                1632981259000L,
-                1632981249000L);
-        List<String> message = Arrays.asList("this",
-                "is",
-                "a",
-                "join",
-                "test",
-                "which",
-                "ama");
-        List<String> order = Arrays.asList("1001",
-                "1002",
-                "1007",
-                "1003",
-                "1005",
-                "1006",
-                "1002");
-        List<Row> source = new ArrayList<>();
-        for (int a = 0; a < timestamp.size(); a++) {
-            Row each = new Row(3);
-            each.setField(0, timestamp.get(a));
-            each.setField(1, order.get(a));
-            each.setField(2, message.get(a));
-            source.add(each);
-        }
-        return source;
-    }
-
-
-    public static void main(String[] args) throws Exception {
-        StreamExecutionEnvironment env = TestUtil.iniEnv(1);
-        env.getConfig().setAutoWatermarkInterval(200L);
-
-
-        // order
-        String[] names = new String[]{"eve_time", "order"};
-        TypeInformation[] types = new TypeInformation[]{Types.LONG, Types.STRING};
-        DataStream<Row> order = env.addSource(new TestSource("oder", buildOrder()))
-                .returns(Types.ROW_NAMED(names, types))
-                .assignTimestampsAndWatermarks(
-                        WatermarkStrategy
-                                .<Row>forGenerator(WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(0)))
-                                .withTimestampAssigner((event, pre) -> (long) event.getField(0))
-                                .withIdleness(Duration.ofSeconds(5))
-                );
-
-        names = new String[]{"eve_time", "order", "info"};
-        types = new TypeInformation[]{Types.LONG, Types.STRING, Types.STRING};
-        DataStream<Row> orderInfo = env.addSource(new TestSource("order info", buildOrderInfo()))
-                .returns(Types.ROW_NAMED(names, types))
-                .assignTimestampsAndWatermarks(
-                        WatermarkStrategy
-                                .<Row>forGenerator(WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(0)))
-                                .withTimestampAssigner((event, pre) -> (long) event.getField(0))
-                                .withIdleness(Duration.ofSeconds(5))
-                );
-
-        order.join(orderInfo)
-                .where(
-                        e -> e.getField(1)
-                )
-                .equalTo(
-                        e -> e.getField(1)
-                )
-                .window(TumblingEventTimeWindows.of(Time.seconds(5)))
-                .apply(new JoinFunction<Row, Row, String>() {
-                    @Override
-                    public String join(Row first, Row second) throws Exception {
-                        return (first.getField(0).toString()) + "," + first.getField(1) + "," + second.getField(2);
-                    }
-                })
-                .print();
-        env.execute();
-
-    }
-}
+stream
+       .windowAll(...)           <-  required: "assigner"
+      [.trigger(...)]            <-  optional: "trigger" (else default trigger)
+      [.evictor(...)]            <-  optional: "evictor" (else no evictor)
+      [.allowedLateness(...)]    <-  optional: "lateness" (else zero)
+      [.sideOutputLateData(...)] <-  optional: "output tag" (else no side output for late data)
+       .reduce/aggregate/apply()      <-  required: "function"
+      [.getSideOutput(...)]      <-  optional: "output tag"
 
 ```
 
+无论是keyed 或者是 non-keyed window，都按照以下步骤：
 
+1. 定义窗口类型，并且传入窗口 `assigner`。默认`assigner`窗口有：`Tumbling`，`Sliding`，`Session`，`Global` ；自定义窗口需要自行实现`WindowAssigner`接口即可。
+2. **可选定义**：   定义窗口触发条件`trigger`， 窗口数据清理条件`evictor`，窗口延迟 `allowedLateness`，迟到数据旁路输出。
+3. 定义计算方法。
 
+## 2.1 窗口类型 (Window assigner)
 
+### 2.1.1 Tumbling (滚动)
 
-- 输出结果
+        以用户定义间隙将数据无重叠的划分。如，窗口大小为5分钟，从 00:00 ~ 00:05 （包括00 不包括 05）、00:05 ~ 00:10、00:10 ~ 00:15 。。。范围对数据进行划分。
 
-```
-order info output:+I[1632981239000, 1001, this]
-oder output:+I[1632981239000, 1001]
-// watermark: 1632981239000
-
-order info output:+I[1632981242000, 1002, is]
-oder output:+I[1632981240000, 1002]
-// watermark: 1632981240000 触发 >=35 < 40 窗口
-
-1632981239000,1001,this
-
-
-
-order info output:+I[1632981244000, 1007, a]
-oder output:+I[1632981243000, 1004]
-// watermark：1632981243000
-
-order info output:+I[1632981231000, 1003, join]
-oder output:+I[1632981247000, 1003]
-// watermark：1632981247000 触发 >=40 < 45 窗口
-
-1632981240000,1002,is
-
-order info output:+I[1632981249000, 1005, test]
-oder output:+I[1632981249000, 1005]
-// watermark：1632981247000
-
-oder output:+I[1632981259000, 1006]
-order info output:+I[1632981259000, 1006, which]
-// watermark：1632981259000 触发 >=45 < 50 窗口
-
-1632981249000,1005,test
-
-
-order info output:+I[1632981249000, 1002, ama]
-oder output:+I[1632981249000, 1007]
+![翻滚的窗户](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/tumbling-windows.svg)
 
 ```
+DataStream<T> input = ...;
 
-
-
-### 1.2. Interval Join
-
-     与Window Join不同，Interval Join不依赖Flink的`WindowAssigner`，而是根据一个时间间隔（Interval）界定时间。Interval需要一个时间下界（Lower Bound）和上界（Upper Bound），如果我们将input1和input2进行Interval Join，input1中的某个元素为input1.element1，时间戳为input1.element1.ts，那么一个Interval就是[input1.element1.ts + lowerBound, input1.element1.ts + upperBound]，input2中落在这个时间段内的元素将会和input1.element1组成一个数据对。用数学公式表达为，凡是符合下面公式的元素，会两两组合在一起。 input1.element1.ts + lowerBound \le input2.elementX.ts \le input1.element1.ts + upperBound*i**n**p**u**t*1.*e**l**e**m**e**n**t*1.*t**s*+*l**o**w**e**r**B**o**u**n**d*≤*i**n**p**u**t*2.*e**l**e**m**e**n**t**X*.*t**s*≤*i**n**p**u**t*1.*e**l**e**m**e**n**t*1.*t**s*+*u**p**p**e**r**B**o**u**n**d* 上下界可以是正数也可以是负数。
-
-
-
-## 2.  迟到数据处理
-
-Flink windows 默认会对迟到数据进行丢弃。
-
-### 2.1 sideout 旁路输出过期数据
-
-```
-final OutputTag<T> lateOutputTag = new OutputTag<T>("late-data"){};
-
-DataStream<T> input = ...
-
-SingleOutputStreamOperator<T> result = input
+// tumbling event-time windows
+input
     .keyBy(<key selector>)
-    .window(<window assigner>)
-    .allowedLateness(<time>)
-    .sideOutputLateData(lateOutputTag)
+    // process time 的时候使用 window(TumblingEventTimeWindows.of(Time.days(1), Time.hours(-8)))
+
+    .window(TumblingEventTimeWindows.of(Time.seconds(5)))
     .<windowed transformation>(<window function>);
-
-DataStream<T> lateStream = result.getSideOutput(lateOutputTag);
 ```
 
-### 2.2 allowedLateness 
+### 2.1.2 Sliding 滑动窗口
 
-**注意 window 中 `allowedLateness`只能在`evnet time`中使用，`allowedLateness ` 会多次触发窗口：第一次是5s 到达，正常触发一次。后续当 窗口关闭时间(watermark)+allowedLateness > timestamp > 窗口关闭时间（watermark）的数据到来会再次触发窗口的运算。假如自定义 state ，必须要自行处理window 更新的逻辑，不能光一次性插入状态。**
-
-- 样例代码：
+![滑动窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/sliding-windows.svg)
 
 ```
-DataStream<Tuple4<String, String, Integer, String>> allowedLatenessStream = input
-      .assignTimestampsAndWatermarks(
-                WatermarkStrategy
-                        .<Row>forGenerator(WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(3)))
-                        .withTimestampAssigner(...)
-                        .withIdleness(Duration.ofSeconds(5))
-        ) 
-      .keyBy(item -> item.f0)
-      .timeWindow(Time.seconds(5))
-      .allowedLateness(Time.seconds(5))
-      .process(统计每一个窗口的个数);
+// sliding processing-time windows offset by -8 hours
+input
+    .keyBy(<key selector>)
+    .window(SlidingProcessingTimeWindows.of(Time.hours(12), Time.hours(1), Time.hours(-8)))
+    .<windowed transformation>(<window function>);
 ```
 
-- 测试用例
+### 2.1.3 Session 会话
 
-> 以上面的代码为例，说明 allowedLateness  配合 watermark 的使用。
+![会话窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/session-windows.svg)
 
 ```
-// watermark= max(timestamp-3)， 窗口延迟为 5， 窗口范围为： 00~05时间段。则允许的时间范围为00~13(watermark+3+5)
-1633920480000
-1633920485000
-// 注意，1633920485000不会触发窗口计算，因为 watermark = max(timestamp-3), forBoundedOutOfOrderness 策略造成
-1633920488000
-// 1633920488000-1633920480000 = 8s 触发运算
-(1633920480000~1633920485000,1)
-1633920481000 
-// 触发运算
-(1633920480000~1633920485000,2)
-1633920490000
-1633920493000
-// 触发运算,关闭窗口1633920480000~1633920485000
-(1633920485000~1633920490000,2)
-1633920481000
-// 丢弃，过期
+DataStream<T> input = ...;
+
+// event-time session windows with static gap
+input
+    .keyBy(<key selector>)
+    .window(EventTimeSessionWindows.withGap(Time.minutes(10)))
+    .<windowed transformation>(<window function>);
+    
+// event-time session windows with dynamic gap
+input
+    .keyBy(<key selector>)
+    .window(EventTimeSessionWindows.withDynamicGap((element) -> {
+        // determine and return session gap
+    }))
+    .<windowed transformation>(<window function>);
+```
+
+### 2.1.4 全局窗口
+
+![全局窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/non-windowed.svg)
+
+```
+DataStream<T> input = ...;
+
+input
+    .keyBy(<key selector>)
+    .window(GlobalWindows.create())
+    .<windowed transformation>(<window function>);
+```
+
+### 3. 窗口函数(windows operator)
+
+- reduce
+
+- agg
+
+```
+public interface AggregateFunction<IN, ACC, OUT> extends Function, Serializable {
+
+   // 在一次新的aggregate发起时，创建一个新的Accumulator，Accumulator是我们所说的中间状态数据，简称ACC
+   // 这个函数一般在初始化时调用
+   ACC createAccumulator();
+
+   // 当一个新元素流入时，将新元素与状态数据ACC合并，返回状态数据ACC
+   ACC add(IN value, ACC accumulator);
+  
+   // 将两个ACC合并
+   ACC merge(ACC a, ACC b);
+
+   // 将中间数据转成结果数据
+   OUT getResult(ACC accumulator);
+
+}
+```
+
+## 4. 触发器(Trigger) & 清除器(Evictor)
+
+### 4.1 触发器（Trigger）
+
+    **Trigger本质是一个特殊的timer**。触发器（Trigger）控制了窗口的结束，任何一个 `WindowAssigner` 都会定义一个默认的 `Trigger`，如：使用`TumblingEventTimeWindows`，默认会使用`EventTimeTrigger`。`Trigger`可以按照一定规律触发行为，实现在watermark 没有到达前输出部分数据。 自定义 `Trigger` 由两部分构成：触发`Trigger`的事件&`Trigger`触发后的行为。
+
+- 触发调用 `Trigger` 的事件（Trigger 接口中包含的函数）
+
+> 注意前三种必须返回 `TriggerResult` 对象，通过`TriggerResult`控制窗口行为 。后两种没有任何返回。
+
+1. onElement : 每一条数据，触发。
+2. onEventTime：当定义使用event time 的timer fire 时候，触发。
+
+3. onProcessingTime：当定义使用process time 的timer fire 时候，触发。
+
+4. onMerge： 两个窗口被合并时候触发。如： session window。
+5. clear：窗口被清除时触发。
+
+- 触发后的行为(`TriggerResult`对象，以下操作可以是event or process time触发)
+
+1. CONTINUE：什么都不做。
+
+2. FIRE：启动计算并将结果发送给下游，不清理窗口数据。
+
+3. PURGE：清理窗口数据但不执行计算。
+
+4. FIRE_AND_PURGE：启动计算，发送结果然后清理窗口数据。
+
+- 预定义 Trigger
+
+1. EventTimeTrigger：当 event time 的watermark 大于窗口边界触发。
+2. ProcessingTimeTrigger：当 process time 的watermark 大于窗口边界触发。
+3. CountTrigger ：在Windows 中的数据达到一定量时触发。
+4. DeltaTrigger：计算上次触发的数据点与当前到达的数据点之间的增量。如果 delta 高于指定的阈值，它就会触发。
+5. NeverTrigger：永远不会触发的触发器，作为 GlobalWindows 的默认触发器。
+6. ContinuousEventTimeTrigger：一定时间间隔内多次触发窗口，**注意必须 watermark 流动才能触发窗口**。
+7. ContinuousProcessingTimeTrigger：一定时间间隔内多次触发窗口。
+
+### 4.2 清除器(Evictor)
+
+​       清除器（Evictor）是在`WindowAssigner`和`Trigger`的基础上的一个可选选项(Trigger 中的 clear 方法一样能够清除数据)，用来清除一些数据。我们可以在Window Function执行前或执行后调用Evictor。
+
+- 语法
+
+```
+/**
+	* T为元素类型
+	* W为窗口
+  */
+public interface Evictor<T, W extends Window> extends Serializable {
+
+    // 在Window Function前调用
+    void evictBefore(Iterable<TimestampedValue<T>> elements, int size, W window, EvictorContext evictorContext);
+
+    // 在Window Function后调用
+    void evictAfter(Iterable<TimestampedValue<T>> elements, int size, W window, EvictorContext evictorContext);
+
+    // Evictor的上下文
+    interface EvictorContext {
+        long getCurrentProcessingTime();
+        MetricGroup getMetricGroup();
+        long getCurrentWatermark();
+    }
+}
+```
+
+​        evictBefore和evictAfter分别在Window Function之前和之后被调用，窗口的所有元素被放在了Iterable<TimestampedValue<T>>；
+
+- 内置 Evictor
+
+1. `CountEvictor`保留一定数目的元素，多余的元素按照从前到后的顺序先后清理。
+2. `TimeEvictor`保留一个时间段的元素，早于这个时间段的元素会被清理。
+
+- 自定 Evictor（TimeEvictor源码）
+
+```
+if (!hasTimestamp(elements)) {
+	return;
+}
+
+long currentTime = getMaxTimestamp(elements);
+long evictCutoff = currentTime - windowSize;
+
+for (Iterator<TimestampedValue<Object>> iterator = elements.iterator();
+		iterator.hasNext(); ) {
+	TimestampedValue<Object> record = iterator.next();
+	if (record.getTimestamp() <= evictCutoff) {
+		iterator.remove();
+	}
+}
 ```
 
 

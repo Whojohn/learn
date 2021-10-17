@@ -1,254 +1,149 @@
-# Flink-4-Operators 
+# Flink-4-数据类型和序列化
 
-## 1. DataStream 中的 Operators
+`Flink` 针对不同的数据类型采取不同序列化策略，以节省内存、网络的开销。`Flink`序列化应用于网络数据交换和内存管理中，其中**内存管理是应用在`Batch`模式**下的`MemoryManager`中用于处理`sort`，`join`，`shuffle`等操作。数据类型的声明必须在`execute()`, `print()`, `count()`, or `collect()` 方法调用前确定。
 
-### 1.1 DataStream 类与子类包含的Operators
 
-      Flink source就是 `DataStream`的源头，   `operator` 操作会把输入的`DataStreams` 转化为一个或多个其他`stream`。其中`DataStream` 子类有： `SingleOutputStreamOperator`，`IterativeStream`， `KeyedStream`，`DataStreamSource` 等。`operator`  通过 `stream` 的函数进行调用。
+- Flink 序列化调用图
+![stream序列化调用图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-howSerialWorkInFlinkMethod.png?raw=true)
 
-**源码 Stream路径 ：org.apache.flink.streaming.api.datastream，以下列举常见 stream **
-![stream流源码路径](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-stream.png?raw=true)
+- Flink batch模式下数据类型与内存管理关系图
+![Flink batch模式下数据类型与内存管理关系图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-typeWorkWithSerialInMemory.png?raw=true)
 
-**stream类**
-![stream分类](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-stream(%E6%8A%BD%E8%B1%A1%E6%A6%82%E5%BF%B5%E7%9A%84stream).svg?raw=true)
 
-**operator总览**
-![operator总览](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-operator.svg?raw=true)
+## 1.1 Flink 数据类型
 
-- DataStream
+### 1.1.1 Flink 支持数据类型：
 
-    一个`DataStream` 实例内的每一个元素的数据类型必须一致。核心方法：
+1. 基础数据类型：`Java` 基础数据类型及包装类，`String`，`Date`，`BigDecimal`，`BigInteger`。
+2. 数组：`Java`基础数据类型的数组和Object数组
+3. 复杂类型：
 
-> **流合并**
+> Flink java tuple 类：最大长度为25，不支持为空对象
 >
-> union ：多个同类型 stream 合并。
+> Scala case calss: 不支持空对象
 >
-> connect：**只能合并两个流，流的格式可以不一样。一般其中一条流相当于信号，用于控制，算法等场景。**
+> Flink Row: 支持为空，不限长度，可以下标+名字的方式访问变量
 >
-> **算子数据交换策略：**
->
-> forwark：算子间数据没有交换，算子链的工作模式。
->
-> rebalance：Round-ribon算法，轮询发送到下游。(**默认不同并行度算子的数据交换交换方式。StreamGraph.addEdgeInternal 方法控制**)
->
-> rescale：将数据均匀的轮询到下游，与`reblance` 区别是只在同slot 下轮询发送。
->
-> shuffle：随机发送到下游。
->
-> broadcast：广播，将数据广播到下游所有分区，所有分区接收一样的数据。
->
-> partitionCustom：用户自定义数据交换方式
->
-> global： 所有数据发送到下游的某一个实例上
->
-> **其他常用operator：**
->
-> map flatMap process filter
+> POJOs: 符合 pojo 的类
 
-- SingleOutputStreamOperator
+4. 辅助类型：`option`，`Either`，`Lists`，`Maps`，`Value`， `Hadoop Writables`对象...
+5. Generic type:  非`Flink`框架序列化，只能由 `Kyro`序列化。
+6. **不支持数据类型**: 文件对象，`i/o stream` ，native 对象，`guava`对象等，这些 `kyro`序列化也会引发异常。
 
-> 预定义输出类型的流，子类有：`DataStreamSource`， `IterativeStream`。
+### 1.1.2 Pojo
 
-- IterativeStream
+**Pojo 定义：**
 
-> 通过将一个运算符的输出重定向到某个先前的运算符。
+1. 该类必须用`public`修饰，且必须有一个`public`的无参数的构造函数。
+2. 类属性**不能含有**`static`修饰的变量。属性要么`public`修饰 ，要么带有`getxxx`，`setxxx` 变量读写方法。
+3. 所有子字段也必须是Flink支持的数据类型。
 
-- KeyedStream
-
-> 将流以 hash 的方式进行分区，调用windows 函数必须是已分区的数据。
->
-> **常用operator:**
->
-> agg，sum，min，max ，TimeWindow，CountWindow，SessionWindow， reduce。
-
-- WindowedStream
-
->**常用operator:**
->windowAll, window，reduce
-
-- ConnectedStreams
-
-> connect 连接的两个数据类型不一样的流产生的流
-
-### 1.1.2 自定义操作函数使用(ProcessFunction及其子类应用)
+**如何检测是否为 Pojo **
 
 ```
-
+// 通过序列方法得知是否为pojo
+System.out.println(TypeInformation.of(xxx.class).createSerializer(new ExecutionConfig()));
+// 详细信息
+System.out.println(TypeInformation.of(new TypeHint<A>() {});)
 ```
 
-> 对于没有预定义操作的函数，必须传入lambda 表达式式或者实体类。其中自定义操作函数有 xxxFunction 接口，RichxxxFunction 接口两种。其中 Rich 与 普通实现相比增加以下方法：
->
-> - `open()`方法：Flink在算子调用前会执行一次，用于初始化工作。
-> - `close()`方法：Flink在算子最后一次调用结束后执行这个方法，用于释放资源。
-> - `getRuntimeContext()`方法：获取运行时上下文。每个并行的算子子任务都有一个运行时上下文，上下文记录了这个算子运行过程中的一些信息，包括算子当前的并行度、算子子任务序号、广播数据、累加器、监控数据。最重要的是，我们可以从上下文里获取**状态数据**。
+### 1.2 数据类型声明
 
-使用样例(**假如使用lambda 表达式必须使用return 函数声明返回数据类型，因为java 泛型存在类型擦除**)
+>        `Flink`中数据类型的以`TypeInformation`及其子类表达，由于 Java 泛型擦除的存在，会导致 `Flink` 无法正确捕获`operator` 输入/输出的数据类型，虽然默认情况下`Flink`会分析出数据类型(利用`TypeExtractror`）。但是更多时候是无法获取，这时候则必须通过`.return`在`stream`声明所用的数据类型，以帮助 `Flink` 序列化。
 
- ```
-.reduce(new ReduceFunction<Tuple2<StringValue, Integer>>() {
-                    @Override
-                    public Tuple2<StringValue, Integer> reduce(Tuple2<StringValue, Integer> value1, Tuple2<StringValue, Integer> value2) throws Exception {
-                        return new Tuple2(value1.f0, value1.f1 + value2.f1);
-                    }
-                })
- ```
-
-### 1.2 ProcessFunction 
-
-> reference:
->
-> https://ci.apache.org/projects/flink/flink-docs-master/docs/dev/datastream/operators/process_function/#the-keyedprocessfunction
-
-- ProcessFunction 用于一般 `operator`无法满足的场合，是`1.1`中的operator 的底层，它能够处理：
-
-1. event （流中的数据）
-2. 状态（在keyed stream中的容错、一致性），状态的使用放在状态中。
-3. timers（**在keyed stream**中的process \ envent time 触发特殊处理; timer 必须在 keyed stream 中使用）
-
-- ProcessFunction 子类以及变种
-
-> 单流子类：
->
-> 1. ProcessFunction ；不使用timer 的情况下，可以是非 keyedStream
-> 2. KeyedProcessFunction ；用于KeyedStream，keyBy之后的流处理
->
-> 窗口相关子类：
->
-> 1. ProcessWindowFunction 
->
-> 多流子类：
->
-> 1. CoProcessFunction 用于connect连接的流
-> 2. ProcessJoinFunction 用于join流操作
-> 3. BroadcastProcessFunction 用于广播
-> 4. KeyedBroadcastProcessFunction keyBy之后的广播
->
-> 
-
-#### 1.2.1 Timer & ProcessFunction 使用方法
-
-> **注意必须要区分 Timer 只能使用 Timestamp ，与 watermark 没有直接联系。也不会影响 Timestamp 的生成，processFunction 中关于时间的操作都是控制 Timer。ProcessFunction 可以读取 Timestamp 和 WaterMark 信息**
-
-- Timer 使用场景场景(ProcessFunction 的作用)
-
-1. 定期发送统计信息，告警触发。
-2. 机器学习。
-3. 自定义状态量；用timer 进行清楚过期状态量；双流join 同时更新状态量。
-
-- Timer 用于定时触发特定行为，必须满足以下两点：
-
-1.  流中必须包含 `Timestamp`，并且必须是 `keyedStream`。
-2.  `processElement` 中利用 Context.TimerService 控制 Timer，如：registerProcessingTimeTimer 控制 timer fire，deleteProcessingTimeTimer 取消 fire。
+- 如何确保数据类型不存在`Generic type`
 
 ```
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.functions.ProcessFunction;
-import org.apache.flink.util.Collector;
+// 禁止 gereric type 出现
+env.getConfig().disableGenericTypes();
+// 各个stream 环境查看数据类型，用于定位 gereric type 出现的算子
+getRuntimeContext().getExecutionConfig()
+stream.getExecutionConfig()
+stream.getType()
+```
 
-public class CountProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tuple2<Long, Long>> {
-    private Integer cou;
+- .return 声明数据类型场景
 
+```
+泛型数据类型使用：map， list 
+row使用
+```
 
-    @Override
-    public void open(Configuration parameters) throws Exception {
-        super.open(parameters);
-        cou = new Integer(0);
-    }
+#### 1.2.1 Flink 数据类型获取方法
 
+> 注意，数据类型的获取也不一定能够解决泛型擦除：如: **`java map`，`java list`，`Row`**等，无法解决的类型的的数据类型声明必须走手动声明，不然会当作`Generic type`处理。
 
-    @Override
-    public void onTimer(long timestamp, OnTimerContext ctx, Collector<Tuple2<Long, Long>> out) throws Exception {
-        super.onTimer(timestamp, ctx, out);
-        cou += 1;
-        System.out.println("fire timer: "+timestamp+"  "+cou);
-    }
+Flink 数据类型的获取有以下方法(`TypeInformation`类获取)：
 
-    @Override
-    public void processElement(Tuple2<Long, Long> value, Context ctx, Collector<Tuple2<Long, Long>> out) throws Exception {
-        ctx.timerService().registerEventTimeTimer(ctx.timestamp() + 300);
-    }
+1. **TypeExtractror** : 默认 `Stream` 间`operator` 提取输出数据类型的类。
+
+```
+TypeExtractror.getForClass(ObjectNode.class)
+//stream 中 map 算子调用的是
+TypeExtractror.getMapReturnTypes...
+```
+
+2. 借助`TypeHint` **！！！注意！！！，type hint 获取的类型也不一定对，如：map，list，必须手动声明，不然会被识别为`Generic type`**
+
+```
+TypeInformation.of(new TypeHint<Tuple2<String, Double>>(){});
+```
+
+#### 1.2.2. 手动声明数据类型
+
+1. 借助 `Types` 类实现
+
+```
+Types.MAP(Types.STRING,Types.STRING)
+Types.ROW(Types.STRING,Types.LIST(Types.STRING), Types.MAP(Types.STRING,Types.INT))
+```
+
+2. 实现 `typeinfo.TypeInfoFactory` 接口
+    - 使用方法
+
+```
+@TypeInfo(MyTupleTypeInfoFactory.class)
+public class MyTuple<T0, T1> {
+  public T0 myfield0;
+  public T1 myfield1;
 }
 
-```
+public class MyPojo {
+  public int id;
 
-
-
-## 2. Flink Sql Api
-
-> Flink 原生的 Operators  功能少，假如需要更高级的功能可以借助 flink sql api 的operator 实现。
-
-
-
-### 3. Stream 流源码追踪
-
->       源码追踪是为了更好的了解 stream 的转变和 operator 的关系。 在 flink 中框架负责 stream 的转变(对用户是无感知)，`operator`的操作逻辑(类似lambda表达式的逻辑，只有流转化逻辑，没有实际处理逻辑)，用户必须实现对应`operator`的操作逻辑。stream 的转变最重要是处理 stream 的数据类型(底层基于泛型擦除实现，必须引入类型以消除影响)。内部`operator`逻辑主要处理算子间连接方式：ChainingStrategy 的定义，还有调用用户定义`operator`处理逻辑的连接。
-
-- 样例代码
-
-```
-StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();
-// 重点追踪以下代码，以说明 operator 以及 stream 的转变在flink 中的使用
-env.fromElements("1").map(e->e).print();
-env.execute();
-```
-
-.map(e->e)
-
-```
-    // 第一步
-	// java 泛型存在泛型擦除，对于没有数据传入数据类型，尝试通过工具类进行类型推断
-    public <R> SingleOutputStreamOperator<R> map(MapFunction<T, R> mapper) {
-
-        TypeInformation<R> outType =
-                TypeExtractor.getMapReturnTypes(
-                        clean(mapper), getType(), Utils.getCallLocationName(), true);
-        return map(mapper, outType);
-    }
-
-	// 第二步 
-	// 通过 transform 作用：1. 将 stream 转变为输出的数据类型。 2. 传入 `operator` 具体实现类，
-    public <R> SingleOutputStreamOperator<R> map(
-            MapFunction<T, R> mapper, TypeInformation<R> outputType) {
-        return transform("Map", outputType, new StreamMap<>(clean(mapper)));
-    }
-    
-    // transform 作用：1. 将 stream 转变为输出的数据类型。
-    @PublicEvolving
-    public <R> SingleOutputStreamOperator<R> transform(
-            String operatorName,
-            TypeInformation<R> outTypeInfo,
-            OneInputStreamOperatorFactory<T, R> operatorFactory) {
-
-        return doTransform(operatorName, outTypeInfo, operatorFactory);
-    }
-
-    protected <R> SingleOutputStreamOperator<R> doTransform(
-            String operatorName,
-            TypeInformation<R> outTypeInfo,
-            StreamOperatorFactory<R> operatorFactory) {
-        // 把流的输出类型信息绑定到流中
-        return returnStream;
-    }
-    
-    // 通过 transform  2. 传入 `operator` 具体实现类;注意这个是内部类逻辑，属于operator 的内部处理逻辑。不负责业务逻辑，只负责框架处理抽象逻辑。
-    @Internal
-	public class StreamMap<IN, OUT> extends AbstractUdfStreamOperator<OUT, MapFunction<IN, OUT>>
-        implements OneInputStreamOperator<IN, OUT> {
-
-    private static final long serialVersionUID = 1L;
-
-    public StreamMap(MapFunction<IN, OUT> mapper) {
-        super(mapper);
-        chainingStrategy = ChainingStrategy.ALWAYS;
-    }
-
-    @Override
-    public void processElement(StreamRecord<IN> element) throws Exception {
-        output.collect(element.replace(userFunction.map(element.getValue())));
-    }
+  @TypeInfo(MyTupleTypeInfoFactory.class)
+  public MyTuple<Integer, String> tuple;
 }
-    
+```
+
+- 实现 `typeinfo.TypeInfoFactory` 接口
+
+```
+public class MyTupleTypeInfoFactory extends TypeInfoFactory<MyTuple> {
+
+  @Override
+  public TypeInformation<MyTuple> createTypeInfo(Type t, Map<String, TypeInformation<?>> genericParameters) {
+    return new MyTupleTypeInfo(genericParameters.get("T0"), genericParameters.get("T1"));
+  }
+}
+```
+
+
+
+### 2. 数据类型序列化
+
+### 2.1 TypeInformation 声明自定义序列化方式
+
+```
+TypeInformation.createSerializer()
+```
+
+### 2.2 第三方序列化方法引入
+
+> 用于 guava 等外部包，无法序列化的场合，一般第三方包自行实现了序列化的实现，可以通过引入解决序列化。
+
+```
+env.getConfig().registerTypeWithKryoSerializer(MyCustomType.class, MyCustomSerializer.class)
 ```
 
 

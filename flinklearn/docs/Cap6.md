@@ -1,228 +1,374 @@
-# Flink-6-窗口
+# Flink-5-时间
 
-> - 注意
->
->   **时间戳在flink 内部以 ms 为单位，unix timestamp 作为基础单位。因此，使用时候要注意时区的影响。比如使用 Tumbling 窗口，中国时间必须处理才能使数据开窗规则为中国自然日。**
+reference:
 
-      窗口将流拆分为有限的桶。窗口内的数据会按照用户逻辑计算，stream 定期生成窗口这样就能达到：每5分钟统计一次pv uv 等维度统计。
+https://nightlies.apache.org/flink/flink-docs-release-1.13/docs/concepts/time/
 
-## 1.1 窗口语法
+[Flink 源码之时间处理 - 简书 (jianshu.com)](https://www.jianshu.com/p/18f680247ef1)
+https://mjz-cn.github.io/2020/03/02/Flink%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-Watermark%E5%8E%9F%E7%90%86/
+http://www.liaojiayi.com/
+https://lulaoshi.info/flink/chapter-time-window/process-function.html
+https://mjz-cn.github.io/2020/03/02/Flink%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-Watermark%E5%8E%9F%E7%90%86/
 
-```
-- keyed stream
-stream
-       .keyBy(...)               <-  keyed versus non-keyed windows
-       .window(...)              <-  required: "assigner"
-      [.trigger(...)]            <-  optional: "trigger" (else default trigger)
-      [.evictor(...)]            <-  optional: "evictor" (else no evictor)
-      [.allowedLateness(...)]    <-  optional: "lateness" (else zero)
-      [.sideOutputLateData(...)] <-  optional: "output tag" (else no side output for late data)
-       .reduce/aggregate/apply()      <-  required: "function"
-      [.getSideOutput(...)]      <-  optional: "output tag"
-      
-      
-- non-keyed stream(注意，该窗口并发度只能为1，会引发性能问题)
+# 1. Time(时间)
+> **注意时间戳在flink 内部以 ms 为单位，unix timestamp 作为基础单位。因此，使用时候要注意时区的影响。**
 
-stream
-       .windowAll(...)           <-  required: "assigner"
-      [.trigger(...)]            <-  optional: "trigger" (else default trigger)
-      [.evictor(...)]            <-  optional: "evictor" (else no evictor)
-      [.allowedLateness(...)]    <-  optional: "lateness" (else zero)
-      [.sideOutputLateData(...)] <-  optional: "output tag" (else no side output for late data)
-       .reduce/aggregate/apply()      <-  required: "function"
-      [.getSideOutput(...)]      <-  optional: "output tag"
+## 1.1 Flink 时间类型
 
-```
+​        Flink 中有三种时间类型：process time, ingest time, event time，性能从好到差，**只有 event time 才有watermark 这个概念。**
 
-无论是keyed 或者是 non-keyed window，都按照以下步骤：
+- process time
 
-1. 定义窗口类型，并且传入窗口 `assigner`。默认`assigner`窗口有：`Tumbling`，`Sliding`，`Session`，`Global` ；自定义窗口需要自行实现`WindowAssigner`接口即可。
-2. **可选定义**：   定义窗口触发条件`trigger`， 窗口数据清理条件`evictor`，窗口延迟 `allowedLateness`，迟到数据旁路输出。
-3. 定义计算方法。
+Flink 算子所在机器的时间。
 
-## 2.1 窗口类型 (Window assigner)
+- ingest time
 
-### 2.1.1 Tumbling (滚动)
+**Flink 1.12 还有这个概念，Flink 1.13 setStreamTimeCharacteristic() 方法被移除，该概念也消失在官网文档中。**
 
-        以用户定义间隙将数据无重叠的划分。如，窗口大小为5分钟，从 00:00 ~ 00:05 （包括00 不包括 05）、00:05 ~ 00:10、00:10 ~ 00:15 。。。范围对数据进行划分。
+​    Flink 源所在的机器的时间，与 process time 相比，它一般是由 source 机器产生的，一般用于处理过程比较耗时的场景。
 
-![翻滚的窗户](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/tumbling-windows.svg)
+- event time
 
-```
-DataStream<T> input = ...;
+​     event 中的事件时间，时间抽取规则必须由用户指定，并且用户也需要额外指定`watermark`机制。
 
-// tumbling event-time windows
-input
-    .keyBy(<key selector>)
-    // process time 的时候使用 window(TumblingEventTimeWindows.of(Time.days(1), Time.hours(-8)))
+### 1.2 Event time & WaterMark
 
-    .window(TumblingEventTimeWindows.of(Time.seconds(5)))
-    .<windowed transformation>(<window function>);
-```
+### 1.2.1 WaterMark 基础
 
-### 2.1.2 Sliding 滑动窗口
+**！！！Event time可以是乱序，WaterMark 必须单调递增！！！**
 
-![滑动窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/sliding-windows.svg)
+- 什么是 WaterMark 
 
-```
-// sliding processing-time windows offset by -8 hours
-input
-    .keyBy(<key selector>)
-    .window(SlidingProcessingTimeWindows.of(Time.hours(12), Time.hours(1), Time.hours(-8)))
-    .<windowed transformation>(<window function>);
-```
+​    WaterMark 是一个窗口开始&结束的时间标记 ，它是一个特殊时间，意味着逻辑上应该没有比这个时间更晚到来的数据，假如有，则不放入计算中(数据延迟引发的晚来)。
 
-### 2.1.3 Session 会话
+- 为什么要引入 WaterMark
 
-![会话窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/session-windows.svg)
+​    event 到达是乱序的，窗口的关闭需要一个时间作为标记，这个时间的标记就是 WaterMark ， WaterMark 定义了乱序数据中，窗口的开始&结束时间。
 
-```
-DataStream<T> input = ...;
+- 生成 WaterMark 注意事项
 
-// event-time session windows with static gap
-input
-    .keyBy(<key selector>)
-    .window(EventTimeSessionWindows.withGap(Time.minutes(10)))
-    .<windowed transformation>(<window function>);
-    
-// event-time session windows with dynamic gap
-input
-    .keyBy(<key selector>)
-    .window(EventTimeSessionWindows.withDynamicGap((element) -> {
-        // determine and return session gap
-    }))
-    .<windowed transformation>(<window function>);
-```
+1. Watermark从evnet 中抽取,必须单调递增。
+2. 假如Flink算子收到一个evnet中time小于WaterMark。Flink提供了一些其他机制来处理迟到数据。(sql中没有晚到数据处理方法)
+3. Watermark机制允许用户来控制准确度和延迟。Watermark设置得与事件时间戳相距紧凑，会产生不少迟到数据，影响计算结果的准确度，整个应用的延迟很低；Watermark设置得非常宽松，准确度能够得到提升，但应用的延迟较高，因为Flink必须等待更长的时间才进行计算。
 
-### 2.1.4 全局窗口
+### 1.2.2 WaterMark 传播原理(分布式WaterMark)
 
-![全局窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/non-windowed.svg)
+reference:
 
-```
-DataStream<T> input = ...;
+Apache flink 时间属性深度解析
 
-input
-    .keyBy(<key selector>)
-    .window(GlobalWindows.create())
-    .<windowed transformation>(<window function>);
-```
+- WaterMark 三个阶段：
+  1. 产生
+  2. 传播
+  3. 处理
+- WaterMark 的传播策略基本上遵循以下三个规则
+  1. watermark 会以广播的形式在算子之间进行传播。比如说上游的算子 连接了三个下游的任务，它会把自己当前的收到的 watermark 以广播的形式 传到下游。 
+  2.  如果在程序里面收到了一个 Long.MAX_VALUE 这个数值的 watermark，就表示对应的那一条流的一个部分不会再有数据发过来了，它相当于就 是一个终止的标志。
+  3. 遵循单输入取其大，多输入取小。
 
-### 3. 窗口函数(windows operator)
 
-- reduce
 
-- agg
+### 1.2.3 Timestamp & WaterMark 生成方式
+
+> https://nightlies.apache.org/flink/flink-docs-master/docs/dev/datastream/sources/
+
+
+
+- **Timestamp & WaterMark 生成方式，主要有两种方式：**
+
+1. Source 中定义
+2. Stream 中定义
+
+- **WaterMark 生成的方式又有：**
+
+**注意，每一条数据都必须有 Timestamp 但是不一定触发 WaterMark 计算。任何`WaterMark`生成方式，都是通过emitWatermark 函数的调用进行控制。**
+
+1. 定期生成(Punctuated/Periodic)。
+
+2. 特殊事件生成(用户自定义特殊事件触发 watermark )。
+
+
+
+- **如何在source 和 stream 中声明 Timestamp 和 WaterMark**
+
+**注意不同source 定义方式不能混用 Timestamp 生成方法，使用了旧版声明方式会导致新版声明方式失败，因为新版source 调用方法 fromSource 会导致assignTimestampsAndWatermarks失效。**
+
+**对于1.10 以下版本，旧版source 声明方式：org.apache.flink.streaming.api.functions.source.SourceFunction / RichSourceFunction 实现连接器**
+
+1. source 实现 collectWithTimestamp 方法以提供 Timestamp 的生成, 调用 emitWatermark  配置waterMarker。
+2. stream.assignTimestampsAndWatermarks(WatermarkStrategy) ，stream 配置 timestamp 和 watermark。
+
+**新版source声明方式：org.apache.flink.api.connector.source.Source 实现的连接器 **
+
+1. env.fromSource 方法声明 source 中定义 timestamp 提前与 watermark 实现策略。
 
 ```
-public interface AggregateFunction<IN, ACC, OUT> extends Function, Serializable {
-
-   // 在一次新的aggregate发起时，创建一个新的Accumulator，Accumulator是我们所说的中间状态数据，简称ACC
-   // 这个函数一般在初始化时调用
-   ACC createAccumulator();
-
-   // 当一个新元素流入时，将新元素与状态数据ACC合并，返回状态数据ACC
-   ACC add(IN value, ACC accumulator);
-  
-   // 将两个ACC合并
-   ACC merge(ACC a, ACC b);
-
-   // 将中间数据转成结果数据
-   OUT getResult(ACC accumulator);
-
-}
+environment.fromSource(
+    Source<OUT, ?, ?> source,
+    WatermarkStrategy<OUT> timestampsAndWatermarks,
+    String sourceName)
 ```
 
-## 4. 触发器(Trigger) & 清除器(Evictor)
+2. **新版fromSource 方法无法通过 assignTimestampsAndWatermarks 配置 stream 中 Timestamp和WaterMark ，因为 fromsource 会使得assignTimestampsAndWatermarks 失效。**
 
-### 4.1 触发器（Trigger）
+### 1.2.4 WatermarkStrategy
 
-    **Trigger本质是一个特殊的timer**。触发器（Trigger）控制了窗口的结束，任何一个 `WindowAssigner` 都会定义一个默认的 `Trigger`，如：使用`TumblingEventTimeWindows`，默认会使用`EventTimeTrigger`。`Trigger`可以按照一定规律触发行为，实现在watermark 没有到达前输出部分数据。 自定义 `Trigger` 由两部分构成：触发`Trigger`的事件&`Trigger`触发后的行为。
+WatermarkStrategy 中规定了 Timestamp、WaterMark 生成与管理方式。
 
-- 触发调用 `Trigger` 的事件（Trigger 接口中包含的函数）
-
-> 注意前三种必须返回 `TriggerResult` 对象，通过`TriggerResult`控制窗口行为 。后两种没有任何返回。
-
-1. onElement : 每一条数据，触发。
-2. onEventTime：当定义使用event time 的timer fire 时候，触发。
-
-3. onProcessingTime：当定义使用process time 的timer fire 时候，触发。
-
-4. onMerge： 两个窗口被合并时候触发。如： session window。
-5. clear：窗口被清除时触发。
-
-- 触发后的行为(`TriggerResult`对象，以下操作可以是event or process time触发)
-
-1. CONTINUE：什么都不做。
-
-2. FIRE：启动计算并将结果发送给下游，不清理窗口数据。
-
-3. PURGE：清理窗口数据但不执行计算。
-
-4. FIRE_AND_PURGE：启动计算，发送结果然后清理窗口数据。
-
-- 预定义 Trigger
-
-1. EventTimeTrigger：当 event time 的watermark 大于窗口边界触发。
-2. ProcessingTimeTrigger：当 process time 的watermark 大于窗口边界触发。
-3. CountTrigger ：在Windows 中的数据达到一定量时触发。
-4. DeltaTrigger：计算上次触发的数据点与当前到达的数据点之间的增量。如果 delta 高于指定的阈值，它就会触发。
-5. NeverTrigger：永远不会触发的触发器，作为 GlobalWindows 的默认触发器。
-6. ContinuousEventTimeTrigger：一定时间间隔内多次触发窗口，**注意必须 watermark 流动才能触发窗口**。
-7. ContinuousProcessingTimeTrigger：一定时间间隔内多次触发窗口。
-
-### 4.2 清除器(Evictor)
-
-​       清除器（Evictor）是在`WindowAssigner`和`Trigger`的基础上的一个可选选项(Trigger 中的 clear 方法一样能够清除数据)，用来清除一些数据。我们可以在Window Function执行前或执行后调用Evictor。
-
-- 语法
+- WatermarkStrategy  源码
 
 ```
-/**
-	* T为元素类型
-	* W为窗口
-  */
-public interface Evictor<T, W extends Window> extends Serializable {
+public interface WatermarkStrategy<T>
+        extends TimestampAssignerSupplier<T>, WatermarkGeneratorSupplier<T> {
 
-    // 在Window Function前调用
-    void evictBefore(Iterable<TimestampedValue<T>> elements, int size, W window, EvictorContext evictorContext);
+    // ------------------------------------------------------------------------
+    //  必须实现：createWatermarkGenerator，createTimestampAssigner 方法。
+    // ------------------------------------------------------------------------
 
-    // 在Window Function后调用
-    void evictAfter(Iterable<TimestampedValue<T>> elements, int size, W window, EvictorContext evictorContext);
+    /** 
+    * 用户自定义WatermarkStrategy 必须重写实现event 中提取timestamp的方法
+    */
+    @Override
+    WatermarkGenerator<T> createWatermarkGenerator(WatermarkGeneratorSupplier.Context context);
 
-    // Evictor的上下文
-    interface EvictorContext {
-        long getCurrentProcessingTime();
-        MetricGroup getMetricGroup();
-        long getCurrentWatermark();
+    /**
+     * 用户自定义WatermarkStrategy 必须重写实现event 中提取timestamp的方法
+     */
+    @Override
+    default TimestampAssigner<T> createTimestampAssigner(
+            TimestampAssignerSupplier.Context context) {
+        // 默认情况下会调用 source 中实现的提前方式，如kafka 中默认的提取方式
+        return new RecordTimestampAssigner<>();
+    }
+
+    // ------------------------------------------------------------------------
+    //  用于实例化接口(调用以下方法传入时间戳抽取方式，配合预定义watermark生成方法，可以实例化WatermarkStrategy接口)
+    // ------------------------------------------------------------------------
+
+    /**
+     * 
+     */
+    default WatermarkStrategy<T> withTimestampAssigner(
+            TimestampAssignerSupplier<T> timestampAssigner) {
+        checkNotNull(timestampAssigner, "timestampAssigner");
+        return new WatermarkStrategyWithTimestampAssigner<>(this, timestampAssigner);
+    }
+
+    /**
+     * 传入，event 中抽取时间逻辑实现
+     */
+    default WatermarkStrategy<T> withTimestampAssigner(
+            SerializableTimestampAssigner<T> timestampAssigner) {
+        checkNotNull(timestampAssigner, "timestampAssigner");
+        return new WatermarkStrategyWithTimestampAssigner<>(
+                this, TimestampAssignerSupplier.of(timestampAssigner));
+    }
+
+    /**
+     * 固定时间触发事件戳，用于数据流停止，窗口没法停止的场景
+     */
+    default WatermarkStrategy<T> withIdleness(Duration idleTimeout) {
+        checkNotNull(idleTimeout, "idleTimeout");
+        checkArgument(
+                !(idleTimeout.isZero() || idleTimeout.isNegative()),
+                "idleTimeout must be greater than zero");
+        return new WatermarkStrategyWithIdleness<>(this, idleTimeout);
+    }
+
+    // ------------------------------------------------------------------------
+    //  Convenience methods for common watermark strategies
+    // ------------------------------------------------------------------------
+
+    /**
+     * 延迟为0的时间戳
+     * 底层实现为BoundedOutOfOrdernessWatermarks 传入最大等待时间为0
+     *
+     */
+    static <T> WatermarkStrategy<T> forMonotonousTimestamps() {
+        return (ctx) -> new AscendingTimestampsWatermarks<>();
+    }
+
+    /**
+     * 固定延迟时间
+     * watermark 策略使用 BoundedOutOfOrdernessWatermarks 。BoundedOutOfOrdernessWatermarks 策略：     
+     * 用户传入一个最大等待时间，每一个传入timestamp 更新内部 maxTimestamp = max(用户最大等待时间, 事件时间)，
+     * 周期发送 watermark = maxTimestamp-用户最大等待时间-1。
+     */
+    static <T> WatermarkStrategy<T> forBoundedOutOfOrderness(Duration maxOutOfOrderness) {
+        return (ctx) -> new BoundedOutOfOrdernessWatermarks<>(maxOutOfOrderness);
+    }
+
+    /** 从 WatermarkGeneratorSupplier 中提取 watermark 生成策略 */
+    static <T> WatermarkStrategy<T> forGenerator(WatermarkGeneratorSupplier<T> generatorSupplier) {
+        return generatorSupplier::createWatermarkGenerator;
+    }
+
+    /**
+     * 不产生watermark，用于 processtime 场景
+     */
+    static <T> WatermarkStrategy<T> noWatermarks() {
+        return (ctx) -> new NoWatermarksGenerator<>();
     }
 }
-```
-
-​        evictBefore和evictAfter分别在Window Function之前和之后被调用，窗口的所有元素被放在了Iterable<TimestampedValue<T>>；
-
-- 内置 Evictor
-
-1. `CountEvictor`保留一定数目的元素，多余的元素按照从前到后的顺序先后清理。
-2. `TimeEvictor`保留一个时间段的元素，早于这个时间段的元素会被清理。
-
-- 自定 Evictor（TimeEvictor源码）
 
 ```
-if (!hasTimestamp(elements)) {
-	return;
+
+#### 1.2.4.1 TimestampAssigner(WatermarkStrateg.createTimestampAssigner 底层实现)
+
+- TimestampAssigner 源码核心
+
+```
+public interface TimestampAssigner<T> {
+
+    // 当extractTimestamp 传入 前一个时间recordTimestamp 为空时候，使用的是该值
+    long NO_TIMESTAMP = Long.MIN_VALUE;
+
+    /**
+     * 抽取当前时间戳
+     * 传入当前对象和前一个时间戳用于处理；假如前一个时间戳为空，则传入NO_TIMESTAMP；
+     */
+    long extractTimestamp(T element, long recordTimestamp);
 }
 
-long currentTime = getMaxTimestamp(elements);
-long evictCutoff = currentTime - windowSize;
+```
 
-for (Iterator<TimestampedValue<Object>> iterator = elements.iterator();
-		iterator.hasNext(); ) {
-	TimestampedValue<Object> record = iterator.next();
-	if (record.getTimestamp() <= evictCutoff) {
-		iterator.remove();
-	}
+#### 1.2.4.2 WatermarkGenerator（WatermarkStrate.reateWatermarkGenerator 底层实现）
+
+- WatermarkGenerator 源码
+
+```
+public interface WatermarkGenerator<T> {
+
+   /**
+   * 每一条数据都执行该方法
+   * 假如每一条数据都触发，或者根据特定事件触发 watermark， 触发时候调用 emitWatermark 即可
+   */
+    void onEvent(T event, long eventTimestamp, WatermarkOutput output);
+
+    /**
+     *  定期调用该方法
+     * 触发时候调用 emitWatermark 即可
+     */
+    void onPeriodicEmit(WatermarkOutput output);
 }
 ```
 
+#### 1.2.4.3  WatermarkStrategy 调用例子
 
+- 周期性聚合
+
+```
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+
+import java.time.Duration;
+
+
+public class TestSource extends RichParallelSourceFunction<Tuple2<Long, Long>> {
+
+    @Override
+    public void run(SourceContext<Tuple2<Long, Long>> ctx) throws Exception {
+        int cou = 1;
+        Tuple2 tempTuple = new Tuple2();
+        Long[] timeSource = new Long[]{
+                1632981239000l,
+                1632981240000l,
+                1632981243000l,
+                1632981247000l,
+                1632981249000l,
+                1632981259000l,
+                1632981249000l};
+        for (Long each : timeSource) {
+            tempTuple.setFields(new Long(cou), each);
+            ctx.collect(tempTuple);
+            System.out.println("source output:" + each);
+            Thread.sleep(3000);
+            cou += 1;
+        }
+        Thread.sleep(10000);
+        // ctx.collect 方法也有空闲检测，但是没有开放给用户，因此 source 中只能markAsTemporarilyIdle 显式声明告知watermark 此流空闲，生成watermark 不需要等待该流，防止并发流下堵塞
+        // 或者通过 WatermarkStrategy.withIdleness 配置，生成全局watermark 时忽略一段时间没有改变的watermark。
+        ctx.markAsTemporarilyIdle();
+
+        while (true) {
+            Thread.sleep(500);
+        }
+    }
+
+    @Override
+    public void cancel() {
+
+    }
+
+    public static void main(String[] args) throws Exception {
+        org.apache.flink.configuration.Configuration conf = new Configuration();
+        conf.setBoolean("rest.flamegraph.enabled", true);
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(1, conf);
+        env.getConfig().setAutoWatermarkInterval(10000L);
+        env.addSource(new TestSource()).assignTimestampsAndWatermarks(
+                WatermarkStrategy
+                        .<Tuple2<Long, Long>>forGenerator(WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(0)))
+                        .withTimestampAssigner((event, pre) -> event.f1)
+                        .withIdleness(Duration.ofSeconds(5))
+        )
+                .keyBy(e -> e.f0)
+                .window(TumblingEventTimeWindows.of(Time.seconds(10)))
+                .allowedLateness(Time.seconds(0))
+                // 这里用null 是因为分区把每一个元素都分为独立的一个区，所以reduce 相当于无效，没有任何作用，可以 把流转化为 SingleOutputStreamOperator 以查看 windows 中的数据
+                .reduce((value1, value2) -> null)
+                .print();
+        env.execute();
+    }
+}
+
+
+source output:1632981239000
+source output:1632981240000
+source output:1632981243000
+source output:1632981247000
+source output:1632981249000
+(1,1632981239000)
+source output:1632981259000
+source output:1632981249000
+(4,1632981247000)
+(7,1632981249000)
+(2,1632981240000)
+(5,1632981249000)
+(3,1632981243000)
+```
+
+
+
+### 1.2.5 WaterMark 停滞
+
+- 造成原因
+
+  1. 并发流中，有一sub-task没有数据，或者大面积延迟。
+
+     > 因为并发流是需要取所有流的 WaterMark 然后 min(all(WaterMark)) 获取当前算子的watermark 然后往后传递，因为会因为某个流产生滞后的情况。
+
+       2.  多流join，整体的 watermark 是所有流的最小值，因为较慢的流会导致停滞
+       3.  没有新的数据到来，导致生成的 watermark 停止，最后一个窗口无法关闭。
+
+- 解决办法
+
+对于并发流中有一个sub-task 没有数据
+
+1. 算子间添加 shuffle ，reblance 等方法，使得数据重新分部(必须放入到 watermark 声明前，因此对于 source 作用不大)。
+2. 对于 source 来说调用 `markAsTemporarilyIdle` 告知下游(框架collect 也会有定时idle 检测机制），watermark 计算临时忽略该流。
+
+对于没有新的数据到来，引发watermark 停止，导致窗口无法关闭
+
+1. 修改watermark 中的 onPeriodicEmit , 一定时长后推进 `watermark`。**！！！注意！！！，可能会引发窗口过早关闭**
+
+
+
+#### 1.2.6 总结
+
+Watermark 对于event 可复现是因为watermark 只是让窗口累积数据，直至watermark 到达，然后触发窗口生成。**逻辑上 watermark 才有晚于该点的时间数据丢弃，实际上实现是所有数据都下流到windows ，具体数据流的处理的逻辑交由windows处理。**
 

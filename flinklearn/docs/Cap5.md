@@ -1,374 +1,263 @@
-# Flink-5-时间
+# Flink-5-Operators 
 
-reference:
+## 1. DataStream 中的 Operators
 
-https://nightlies.apache.org/flink/flink-docs-release-1.13/docs/concepts/time/
+### 1.1 DataStream 类与子类包含的Operators
 
-[Flink 源码之时间处理 - 简书 (jianshu.com)](https://www.jianshu.com/p/18f680247ef1)
-https://mjz-cn.github.io/2020/03/02/Flink%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-Watermark%E5%8E%9F%E7%90%86/
-http://www.liaojiayi.com/
-https://lulaoshi.info/flink/chapter-time-window/process-function.html
-https://mjz-cn.github.io/2020/03/02/Flink%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-Watermark%E5%8E%9F%E7%90%86/
+      Flink source就是 `DataStream`的源头，   `operator` 操作会把输入的`DataStreams` 转化为一个或多个其他`stream`。其中`DataStream` 子类有： `SingleOutputStreamOperator`，`IterativeStream`， `KeyedStream`，`DataStreamSource` 等。`operator`  通过 `stream` 的函数进行调用。
 
-# 1. Time(时间)
-> **注意时间戳在flink 内部以 ms 为单位，unix timestamp 作为基础单位。因此，使用时候要注意时区的影响。**
+**源码 Stream路径 ：org.apache.flink.streaming.api.datastream，以下列举常见 stream **
+![stream流源码路径](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap5-stream.png?raw=true)
 
-## 1.1 Flink 时间类型
+**stream类**
+![stream分类](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap5-stream(%E6%8A%BD%E8%B1%A1%E6%A6%82%E5%BF%B5%E7%9A%84stream).svg?raw=true)
 
-​        Flink 中有三种时间类型：process time, ingest time, event time，性能从好到差，**只有 event time 才有watermark 这个概念。**
+**operator总览**
+![operator总览](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap5-operator.svg?raw=true)
 
-- process time
+- DataStream
 
-Flink 算子所在机器的时间。
+    一个`DataStream` 实例内的每一个元素的数据类型必须一致。核心方法：
 
-- ingest time
+> **流合并**
+>
+> union ：多个同类型 stream 合并。
+>
+> connect：**只能合并两个流，流的格式可以不一样。一般其中一条流相当于信号，用于控制，算法等场景。**
+>
+> **算子数据交换策略：**
+>
+> forwark：算子间数据没有交换，算子链的工作模式。
+>
+> rebalance：Round-ribon算法，轮询发送到下游。(**默认不同并行度算子的数据交换交换方式。StreamGraph.addEdgeInternal 方法控制**)
+>
+> rescale：将数据均匀的轮询到下游，与`reblance` 区别是只在同slot 下轮询发送。
+>
+> shuffle：随机发送到下游。
+>
+> broadcast：广播，将数据广播到下游所有分区，所有分区接收一样的数据。
+>
+> partitionCustom：用户自定义数据交换方式
+>
+> global： 所有数据发送到下游的某一个实例上
+>
+> **其他常用operator：**
+>
+> map flatMap process filter
 
-**Flink 1.12 还有这个概念，Flink 1.13 setStreamTimeCharacteristic() 方法被移除，该概念也消失在官网文档中。**
+- SingleOutputStreamOperator
 
-​    Flink 源所在的机器的时间，与 process time 相比，它一般是由 source 机器产生的，一般用于处理过程比较耗时的场景。
+> 预定义输出类型的流，子类有：`DataStreamSource`， `IterativeStream`。
 
-- event time
+- IterativeStream
 
-​     event 中的事件时间，时间抽取规则必须由用户指定，并且用户也需要额外指定`watermark`机制。
+> 通过将一个运算符的输出重定向到某个先前的运算符。
 
-### 1.2 Event time & WaterMark
+- KeyedStream
 
-### 1.2.1 WaterMark 基础
+> 将流以 hash 的方式进行分区，调用windows 函数必须是已分区的数据。
+>
+> **常用operator:**
+>
+> agg，sum，min，max ，TimeWindow，CountWindow，SessionWindow， reduce。
 
-**！！！Event time可以是乱序，WaterMark 必须单调递增！！！**
+- WindowedStream
 
-- 什么是 WaterMark 
+>**常用operator:**
+>windowAll, window，reduce
 
-​    WaterMark 是一个窗口开始&结束的时间标记 ，它是一个特殊时间，意味着逻辑上应该没有比这个时间更晚到来的数据，假如有，则不放入计算中(数据延迟引发的晚来)。
+- ConnectedStreams
 
-- 为什么要引入 WaterMark
+> connect 连接的两个数据类型不一样的流产生的流
 
-​    event 到达是乱序的，窗口的关闭需要一个时间作为标记，这个时间的标记就是 WaterMark ， WaterMark 定义了乱序数据中，窗口的开始&结束时间。
-
-- 生成 WaterMark 注意事项
-
-1. Watermark从evnet 中抽取,必须单调递增。
-2. 假如Flink算子收到一个evnet中time小于WaterMark。Flink提供了一些其他机制来处理迟到数据。(sql中没有晚到数据处理方法)
-3. Watermark机制允许用户来控制准确度和延迟。Watermark设置得与事件时间戳相距紧凑，会产生不少迟到数据，影响计算结果的准确度，整个应用的延迟很低；Watermark设置得非常宽松，准确度能够得到提升，但应用的延迟较高，因为Flink必须等待更长的时间才进行计算。
-
-### 1.2.2 WaterMark 传播原理(分布式WaterMark)
-
-reference:
-
-Apache flink 时间属性深度解析
-
-- WaterMark 三个阶段：
-  1. 产生
-  2. 传播
-  3. 处理
-- WaterMark 的传播策略基本上遵循以下三个规则
-  1. watermark 会以广播的形式在算子之间进行传播。比如说上游的算子 连接了三个下游的任务，它会把自己当前的收到的 watermark 以广播的形式 传到下游。 
-  2.  如果在程序里面收到了一个 Long.MAX_VALUE 这个数值的 watermark，就表示对应的那一条流的一个部分不会再有数据发过来了，它相当于就 是一个终止的标志。
-  3. 遵循单输入取其大，多输入取小。
-
-
-
-### 1.2.3 Timestamp & WaterMark 生成方式
-
-> https://nightlies.apache.org/flink/flink-docs-master/docs/dev/datastream/sources/
-
-
-
-- **Timestamp & WaterMark 生成方式，主要有两种方式：**
-
-1. Source 中定义
-2. Stream 中定义
-
-- **WaterMark 生成的方式又有：**
-
-**注意，每一条数据都必须有 Timestamp 但是不一定触发 WaterMark 计算。任何`WaterMark`生成方式，都是通过emitWatermark 函数的调用进行控制。**
-
-1. 定期生成(Punctuated/Periodic)。
-
-2. 特殊事件生成(用户自定义特殊事件触发 watermark )。
-
-
-
-- **如何在source 和 stream 中声明 Timestamp 和 WaterMark**
-
-**注意不同source 定义方式不能混用 Timestamp 生成方法，使用了旧版声明方式会导致新版声明方式失败，因为新版source 调用方法 fromSource 会导致assignTimestampsAndWatermarks失效。**
-
-**对于1.10 以下版本，旧版source 声明方式：org.apache.flink.streaming.api.functions.source.SourceFunction / RichSourceFunction 实现连接器**
-
-1. source 实现 collectWithTimestamp 方法以提供 Timestamp 的生成, 调用 emitWatermark  配置waterMarker。
-2. stream.assignTimestampsAndWatermarks(WatermarkStrategy) ，stream 配置 timestamp 和 watermark。
-
-**新版source声明方式：org.apache.flink.api.connector.source.Source 实现的连接器 **
-
-1. env.fromSource 方法声明 source 中定义 timestamp 提前与 watermark 实现策略。
+### 1.1.2 自定义操作函数使用(ProcessFunction及其子类应用)
 
 ```
-environment.fromSource(
-    Source<OUT, ?, ?> source,
-    WatermarkStrategy<OUT> timestampsAndWatermarks,
-    String sourceName)
-```
-
-2. **新版fromSource 方法无法通过 assignTimestampsAndWatermarks 配置 stream 中 Timestamp和WaterMark ，因为 fromsource 会使得assignTimestampsAndWatermarks 失效。**
-
-### 1.2.4 WatermarkStrategy
-
-WatermarkStrategy 中规定了 Timestamp、WaterMark 生成与管理方式。
-
-- WatermarkStrategy  源码
-
-```
-public interface WatermarkStrategy<T>
-        extends TimestampAssignerSupplier<T>, WatermarkGeneratorSupplier<T> {
-
-    // ------------------------------------------------------------------------
-    //  必须实现：createWatermarkGenerator，createTimestampAssigner 方法。
-    // ------------------------------------------------------------------------
-
-    /** 
-    * 用户自定义WatermarkStrategy 必须重写实现event 中提取timestamp的方法
-    */
-    @Override
-    WatermarkGenerator<T> createWatermarkGenerator(WatermarkGeneratorSupplier.Context context);
-
-    /**
-     * 用户自定义WatermarkStrategy 必须重写实现event 中提取timestamp的方法
-     */
-    @Override
-    default TimestampAssigner<T> createTimestampAssigner(
-            TimestampAssignerSupplier.Context context) {
-        // 默认情况下会调用 source 中实现的提前方式，如kafka 中默认的提取方式
-        return new RecordTimestampAssigner<>();
-    }
-
-    // ------------------------------------------------------------------------
-    //  用于实例化接口(调用以下方法传入时间戳抽取方式，配合预定义watermark生成方法，可以实例化WatermarkStrategy接口)
-    // ------------------------------------------------------------------------
-
-    /**
-     * 
-     */
-    default WatermarkStrategy<T> withTimestampAssigner(
-            TimestampAssignerSupplier<T> timestampAssigner) {
-        checkNotNull(timestampAssigner, "timestampAssigner");
-        return new WatermarkStrategyWithTimestampAssigner<>(this, timestampAssigner);
-    }
-
-    /**
-     * 传入，event 中抽取时间逻辑实现
-     */
-    default WatermarkStrategy<T> withTimestampAssigner(
-            SerializableTimestampAssigner<T> timestampAssigner) {
-        checkNotNull(timestampAssigner, "timestampAssigner");
-        return new WatermarkStrategyWithTimestampAssigner<>(
-                this, TimestampAssignerSupplier.of(timestampAssigner));
-    }
-
-    /**
-     * 固定时间触发事件戳，用于数据流停止，窗口没法停止的场景
-     */
-    default WatermarkStrategy<T> withIdleness(Duration idleTimeout) {
-        checkNotNull(idleTimeout, "idleTimeout");
-        checkArgument(
-                !(idleTimeout.isZero() || idleTimeout.isNegative()),
-                "idleTimeout must be greater than zero");
-        return new WatermarkStrategyWithIdleness<>(this, idleTimeout);
-    }
-
-    // ------------------------------------------------------------------------
-    //  Convenience methods for common watermark strategies
-    // ------------------------------------------------------------------------
-
-    /**
-     * 延迟为0的时间戳
-     * 底层实现为BoundedOutOfOrdernessWatermarks 传入最大等待时间为0
-     *
-     */
-    static <T> WatermarkStrategy<T> forMonotonousTimestamps() {
-        return (ctx) -> new AscendingTimestampsWatermarks<>();
-    }
-
-    /**
-     * 固定延迟时间
-     * watermark 策略使用 BoundedOutOfOrdernessWatermarks 。BoundedOutOfOrdernessWatermarks 策略：     
-     * 用户传入一个最大等待时间，每一个传入timestamp 更新内部 maxTimestamp = max(用户最大等待时间, 事件时间)，
-     * 周期发送 watermark = maxTimestamp-用户最大等待时间-1。
-     */
-    static <T> WatermarkStrategy<T> forBoundedOutOfOrderness(Duration maxOutOfOrderness) {
-        return (ctx) -> new BoundedOutOfOrdernessWatermarks<>(maxOutOfOrderness);
-    }
-
-    /** 从 WatermarkGeneratorSupplier 中提取 watermark 生成策略 */
-    static <T> WatermarkStrategy<T> forGenerator(WatermarkGeneratorSupplier<T> generatorSupplier) {
-        return generatorSupplier::createWatermarkGenerator;
-    }
-
-    /**
-     * 不产生watermark，用于 processtime 场景
-     */
-    static <T> WatermarkStrategy<T> noWatermarks() {
-        return (ctx) -> new NoWatermarksGenerator<>();
-    }
-}
 
 ```
 
-#### 1.2.4.1 TimestampAssigner(WatermarkStrateg.createTimestampAssigner 底层实现)
+> 对于没有预定义操作的函数，必须传入lambda 表达式式或者实体类。其中自定义操作函数有 xxxFunction 接口，RichxxxFunction 接口两种。其中 Rich 与 普通实现相比增加以下方法：
+>
+> - `open()`方法：Flink在算子调用前会执行一次，用于初始化工作。
+> - `close()`方法：Flink在算子最后一次调用结束后执行这个方法，用于释放资源。
+> - `getRuntimeContext()`方法：获取运行时上下文。每个并行的算子子任务都有一个运行时上下文，上下文记录了这个算子运行过程中的一些信息，包括算子当前的并行度、算子子任务序号、广播数据、累加器、监控数据。最重要的是，我们可以从上下文里获取**状态数据**。
 
-- TimestampAssigner 源码核心
+使用样例(**假如使用lambda 表达式必须使用return 函数声明返回数据类型，因为java 泛型存在类型擦除**)
+
+ ```
+.reduce(new ReduceFunction<Tuple2<StringValue, Integer>>() {
+                    @Override
+                    public Tuple2<StringValue, Integer> reduce(Tuple2<StringValue, Integer> value1, Tuple2<StringValue, Integer> value2) throws Exception {
+                        return new Tuple2(value1.f0, value1.f1 + value2.f1);
+                    }
+                })
+ ```
+
+### 1.2 ProcessFunction 
+
+> reference:
+>
+> https://ci.apache.org/projects/flink/flink-docs-master/docs/dev/datastream/operators/process_function/#the-keyedprocessfunction
+
+- ProcessFunction 用于一般 `operator`无法满足的场合，是`1.1`中的operator 的底层，它能够处理：
+
+1. event （流中的数据）
+2. 状态（在keyed stream中的容错、一致性），状态的使用放在状态中。
+3. timers（**在keyed stream**中的process \ envent time 触发特殊处理; timer 必须在 keyed stream 中使用）
+
+- ProcessFunction 子类以及变种
+
+> 单流子类：
+>
+> 1. ProcessFunction ；不使用timer 的情况下，可以是非 keyedStream
+> 2. KeyedProcessFunction ；用于KeyedStream，keyBy之后的流处理
+>
+> 窗口相关子类：
+>
+> 1. ProcessWindowFunction 
+>
+> 多流子类：
+>
+> 1. CoProcessFunction 用于connect连接的流
+> 2. ProcessJoinFunction 用于join流操作
+> 3. BroadcastProcessFunction 用于广播
+> 4. KeyedBroadcastProcessFunction keyBy之后的广播
+>
+> 
+
+#### 1.2.1 Timer & ProcessFunction 使用方法
+
+> **注意必须要区分 Timer 只能使用 Timestamp ，与 watermark 没有直接联系。也不会影响 Timestamp 的生成，processFunction 中关于时间的操作都是控制 Timer。ProcessFunction 可以读取 Timestamp 和 WaterMark 信息**
+
+- Timer 使用场景场景(ProcessFunction 的作用)
+
+1. 定期发送统计信息，告警触发。
+2. 机器学习。
+3. 自定义状态量；用timer 进行清楚过期状态量；双流join 同时更新状态量。
+
+- Timer 用于定时触发特定行为，必须满足以下两点：
+
+1.  流中必须包含 `Timestamp`，并且必须是 `keyedStream`。
+2.  `processElement` 中利用 Context.TimerService 控制 Timer，如：registerProcessingTimeTimer 控制 timer fire，deleteProcessingTimeTimer 取消 fire。
 
 ```
-public interface TimestampAssigner<T> {
-
-    // 当extractTimestamp 传入 前一个时间recordTimestamp 为空时候，使用的是该值
-    long NO_TIMESTAMP = Long.MIN_VALUE;
-
-    /**
-     * 抽取当前时间戳
-     * 传入当前对象和前一个时间戳用于处理；假如前一个时间戳为空，则传入NO_TIMESTAMP；
-     */
-    long extractTimestamp(T element, long recordTimestamp);
-}
-
-```
-
-#### 1.2.4.2 WatermarkGenerator（WatermarkStrate.reateWatermarkGenerator 底层实现）
-
-- WatermarkGenerator 源码
-
-```
-public interface WatermarkGenerator<T> {
-
-   /**
-   * 每一条数据都执行该方法
-   * 假如每一条数据都触发，或者根据特定事件触发 watermark， 触发时候调用 emitWatermark 即可
-   */
-    void onEvent(T event, long eventTimestamp, WatermarkOutput output);
-
-    /**
-     *  定期调用该方法
-     * 触发时候调用 emitWatermark 即可
-     */
-    void onPeriodicEmit(WatermarkOutput output);
-}
-```
-
-#### 1.2.4.3  WatermarkStrategy 调用例子
-
-- 周期性聚合
-
-```
-import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.util.Collector;
 
-import java.time.Duration;
+public class CountProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tuple2<Long, Long>> {
+    private Integer cou;
 
-
-public class TestSource extends RichParallelSourceFunction<Tuple2<Long, Long>> {
 
     @Override
-    public void run(SourceContext<Tuple2<Long, Long>> ctx) throws Exception {
-        int cou = 1;
-        Tuple2 tempTuple = new Tuple2();
-        Long[] timeSource = new Long[]{
-                1632981239000l,
-                1632981240000l,
-                1632981243000l,
-                1632981247000l,
-                1632981249000l,
-                1632981259000l,
-                1632981249000l};
-        for (Long each : timeSource) {
-            tempTuple.setFields(new Long(cou), each);
-            ctx.collect(tempTuple);
-            System.out.println("source output:" + each);
-            Thread.sleep(3000);
-            cou += 1;
-        }
-        Thread.sleep(10000);
-        // ctx.collect 方法也有空闲检测，但是没有开放给用户，因此 source 中只能markAsTemporarilyIdle 显式声明告知watermark 此流空闲，生成watermark 不需要等待该流，防止并发流下堵塞
-        // 或者通过 WatermarkStrategy.withIdleness 配置，生成全局watermark 时忽略一段时间没有改变的watermark。
-        ctx.markAsTemporarilyIdle();
+    public void open(Configuration parameters) throws Exception {
+        super.open(parameters);
+        cou = new Integer(0);
+    }
 
-        while (true) {
-            Thread.sleep(500);
-        }
+
+    @Override
+    public void onTimer(long timestamp, OnTimerContext ctx, Collector<Tuple2<Long, Long>> out) throws Exception {
+        super.onTimer(timestamp, ctx, out);
+        cou += 1;
+        System.out.println("fire timer: "+timestamp+"  "+cou);
     }
 
     @Override
-    public void cancel() {
-
-    }
-
-    public static void main(String[] args) throws Exception {
-        org.apache.flink.configuration.Configuration conf = new Configuration();
-        conf.setBoolean("rest.flamegraph.enabled", true);
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(1, conf);
-        env.getConfig().setAutoWatermarkInterval(10000L);
-        env.addSource(new TestSource()).assignTimestampsAndWatermarks(
-                WatermarkStrategy
-                        .<Tuple2<Long, Long>>forGenerator(WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(0)))
-                        .withTimestampAssigner((event, pre) -> event.f1)
-                        .withIdleness(Duration.ofSeconds(5))
-        )
-                .keyBy(e -> e.f0)
-                .window(TumblingEventTimeWindows.of(Time.seconds(10)))
-                .allowedLateness(Time.seconds(0))
-                // 这里用null 是因为分区把每一个元素都分为独立的一个区，所以reduce 相当于无效，没有任何作用，可以 把流转化为 SingleOutputStreamOperator 以查看 windows 中的数据
-                .reduce((value1, value2) -> null)
-                .print();
-        env.execute();
+    public void processElement(Tuple2<Long, Long> value, Context ctx, Collector<Tuple2<Long, Long>> out) throws Exception {
+        ctx.timerService().registerEventTimeTimer(ctx.timestamp() + 300);
     }
 }
 
-
-source output:1632981239000
-source output:1632981240000
-source output:1632981243000
-source output:1632981247000
-source output:1632981249000
-(1,1632981239000)
-source output:1632981259000
-source output:1632981249000
-(4,1632981247000)
-(7,1632981249000)
-(2,1632981240000)
-(5,1632981249000)
-(3,1632981243000)
 ```
 
 
 
-### 1.2.5 WaterMark 停滞
+## 2. Flink Sql Api
 
-- 造成原因
-
-  1. 并发流中，有一sub-task没有数据，或者大面积延迟。
-
-     > 因为并发流是需要取所有流的 WaterMark 然后 min(all(WaterMark)) 获取当前算子的watermark 然后往后传递，因为会因为某个流产生滞后的情况。
-
-       2.  多流join，整体的 watermark 是所有流的最小值，因为较慢的流会导致停滞
-       3.  没有新的数据到来，导致生成的 watermark 停止，最后一个窗口无法关闭。
-
-- 解决办法
-
-对于并发流中有一个sub-task 没有数据
-
-1. 算子间添加 shuffle ，reblance 等方法，使得数据重新分部(必须放入到 watermark 声明前，因此对于 source 作用不大)。
-2. 对于 source 来说调用 `markAsTemporarilyIdle` 告知下游(框架collect 也会有定时idle 检测机制），watermark 计算临时忽略该流。
-
-对于没有新的数据到来，引发watermark 停止，导致窗口无法关闭
-
-1. 修改watermark 中的 onPeriodicEmit , 一定时长后推进 `watermark`。**！！！注意！！！，可能会引发窗口过早关闭**
+> Flink 原生的 Operators  功能少，假如需要更高级的功能可以借助 flink sql api 的operator 实现。
 
 
 
-#### 1.2.6 总结
+### 3. Stream 流源码追踪
 
-Watermark 对于event 可复现是因为watermark 只是让窗口累积数据，直至watermark 到达，然后触发窗口生成。**逻辑上 watermark 才有晚于该点的时间数据丢弃，实际上实现是所有数据都下流到windows ，具体数据流的处理的逻辑交由windows处理。**
+>       源码追踪是为了更好的了解 stream 的转变和 operator 的关系。 在 flink 中框架负责 stream 的转变(对用户是无感知)，`operator`的操作逻辑(类似lambda表达式的逻辑，只有流转化逻辑，没有实际处理逻辑)，用户必须实现对应`operator`的操作逻辑。stream 的转变最重要是处理 stream 的数据类型(底层基于泛型擦除实现，必须引入类型以消除影响)。内部`operator`逻辑主要处理算子间连接方式：ChainingStrategy 的定义，还有调用用户定义`operator`处理逻辑的连接。
+
+- 样例代码
+
+```
+StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();
+// 重点追踪以下代码，以说明 operator 以及 stream 的转变在flink 中的使用
+env.fromElements("1").map(e->e).print();
+env.execute();
+```
+
+.map(e->e)
+
+```
+    // 第一步
+	// java 泛型存在泛型擦除，对于没有数据传入数据类型，尝试通过工具类进行类型推断
+    public <R> SingleOutputStreamOperator<R> map(MapFunction<T, R> mapper) {
+
+        TypeInformation<R> outType =
+                TypeExtractor.getMapReturnTypes(
+                        clean(mapper), getType(), Utils.getCallLocationName(), true);
+        return map(mapper, outType);
+    }
+
+	// 第二步 
+	// 通过 transform 作用：1. 将 stream 转变为输出的数据类型。 2. 传入 `operator` 具体实现类，
+    public <R> SingleOutputStreamOperator<R> map(
+            MapFunction<T, R> mapper, TypeInformation<R> outputType) {
+        return transform("Map", outputType, new StreamMap<>(clean(mapper)));
+    }
+    
+    // transform 作用：1. 将 stream 转变为输出的数据类型。
+    @PublicEvolving
+    public <R> SingleOutputStreamOperator<R> transform(
+            String operatorName,
+            TypeInformation<R> outTypeInfo,
+            OneInputStreamOperatorFactory<T, R> operatorFactory) {
+
+        return doTransform(operatorName, outTypeInfo, operatorFactory);
+    }
+
+    protected <R> SingleOutputStreamOperator<R> doTransform(
+            String operatorName,
+            TypeInformation<R> outTypeInfo,
+            StreamOperatorFactory<R> operatorFactory) {
+        // 把流的输出类型信息绑定到流中
+        return returnStream;
+    }
+    
+    // 通过 transform  2. 传入 `operator` 具体实现类;注意这个是内部类逻辑，属于operator 的内部处理逻辑。不负责业务逻辑，只负责框架处理抽象逻辑。
+    @Internal
+	public class StreamMap<IN, OUT> extends AbstractUdfStreamOperator<OUT, MapFunction<IN, OUT>>
+        implements OneInputStreamOperator<IN, OUT> {
+
+    private static final long serialVersionUID = 1L;
+
+    public StreamMap(MapFunction<IN, OUT> mapper) {
+        super(mapper);
+        chainingStrategy = ChainingStrategy.ALWAYS;
+    }
+
+    @Override
+    public void processElement(StreamRecord<IN> element) throws Exception {
+        output.collect(element.replace(userFunction.map(element.getValue())));
+    }
+}
+    
+```
+
+
+
+
+
+
+
+
+
+
 

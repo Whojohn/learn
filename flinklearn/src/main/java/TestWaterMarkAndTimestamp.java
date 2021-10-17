@@ -1,7 +1,9 @@
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.scala.DataStream;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.types.Row;
@@ -9,6 +11,7 @@ import org.apache.flink.types.Row;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -45,8 +48,10 @@ public class TestWaterMarkAndTimestamp {
 
         String[] names = new String[]{"eve_time", "message"};
         TypeInformation[] types = new TypeInformation[]{Types.LONG, Types.STRING};
+        // 检测是否存在 generic 类型的序列化
+        env.getConfig().disableGenericTypes();
 
-        env.addSource(new TestSource("TestWaterMarkAndTimestamp", buildRow()))
+        SingleOutputStreamOperator temp = env.addSource(new TestSource("TestWaterMarkAndTimestamp", buildRow()))
                 .returns(Types.ROW_NAMED(names, types))
                 .assignTimestampsAndWatermarks(
                         WatermarkStrategy
@@ -54,12 +59,12 @@ public class TestWaterMarkAndTimestamp {
                                 .withTimestampAssigner((event, pre) -> (long) event.getField(0))
                                 .withIdleness(Duration.ofSeconds(5))
                 )
-                .keyBy(e -> e.getField(1))
+                .keyBy(e -> (String)e.getField(1))
                 .window(TumblingEventTimeWindows.of(Time.seconds(10)))
                 .allowedLateness(Time.seconds(0))
                 // 因为 keyed 字段数据都是唯一，所以reduce 相当于支持输出
-                .reduce((a, b) -> a)
-                .print();
+                .reduce((a, b) -> a);
+
         env.execute();
     }
 }
