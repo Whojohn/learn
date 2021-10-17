@@ -1,4 +1,4 @@
-# Flink-7-双流join
+# Flink-8-双流join
 
    **至今 `Flink` 只支持 innner join 和 left join, 无论是 sql api 还是 stream api，无论是哪种join 底层都是基于`CoGroupFunction `实现。** Flink从数据划分又分为：Window Join（窗口连接）和Interval Join（时间间隔连接）;
 
