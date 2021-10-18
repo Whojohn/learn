@@ -1,7 +1,8 @@
 # 个人学习路线图
 
 ## 语言
-- 
+- [java-基础](
+https://github.com/Whojohn/learn/tree/master/docs/java)
 
 ## 数据结构&算法：
 - [数据结构(java & python)](
