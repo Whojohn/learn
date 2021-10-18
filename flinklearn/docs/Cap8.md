@@ -157,7 +157,7 @@ public class TestJoin {
 
 
     public static void main(String[] args) throws Exception {
-        StreamExecutionEnvironment env = TestUtil.iniEnv(1);
+        StreamExecutionEnvironment env = env.TestUtil.iniEnv(1);
         env.getConfig().setAutoWatermarkInterval(200L);
 
 

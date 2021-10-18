@@ -67,7 +67,7 @@ reference: https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/ops/s
 
 ### 1.4 State 数据结构
 
-​		Flink state 提供不同的数据结构，其中 xxxDescriptor 是对应数据结构绑定`state`内部名字和数据类型信息。常用数据结构信息如下：
+		Flink state 提供不同的数据结构，其中 xxxDescriptor 是对应数据结构绑定`state`内部名字和数据类型信息。常用数据结构信息如下：
 
 - State  数据结构
 
@@ -83,7 +83,7 @@ reference: https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/ops/s
 
 ### 1.5 operator State
 
-> ​        operator state 一般用于source/sink。source/sink 中必须实现`CheckpointedFunction`，**source**中使用还必须利用`checkpoint lock`保证数据的安全(**SourceFunction方法文档写明必须带有该操作**)。其他`Function`中使用，无需`checkpoint lock`。
+>         operator state 一般用于source/sink。source/sink 中必须实现`CheckpointedFunction`，**source**中使用还必须利用`checkpoint lock`保证数据的安全(**SourceFunction方法文档写明必须带有该操作**)。其他`Function`中使用，无需`checkpoint lock`。
 
 - operator state 使用方法
 
@@ -97,7 +97,7 @@ reference: https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/ops/s
 
 - operator state 重新分发(并行度修改后对state的影响)
 
-​        operator state 与 keyed state 不同，需要考虑**并发度**修改后的使用不同的重新分发模式。常见的`state 重新分发`模式有：**Even-split redistribution，  **Union redistribution**。
+        operator state 与 keyed state 不同，需要考虑**并发度**修改后的使用不同的重新分发模式。常见的`state 重新分发`模式有：**Even-split redistribution，  **Union redistribution**。
 
  **Even-split redistribution：** getOperatorStateStore().getListState 中重新分发的方法；框架会平均为sub-task 重新分配算子中state，假如state小于并行度，某些`subtask`的state为空。
 
@@ -325,7 +325,7 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
      * @throws Exception 异常
      */
     public static void main(String[] args) throws Exception {
-        StreamExecutionEnvironment env = TestUtil.iniEnv(1);
+        StreamExecutionEnvironment env = env.TestUtil.iniEnv(1);
         env.addSource(new TestSource("TestProcessFunction", buildSource()))
                 .map(e -> {
                     Tuple2<Long, Long> temp = new Tuple2<Long, Long>();
@@ -346,7 +346,7 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
 
 ### 1.6 Keyed State
 
-> ​        keyed state 一样可以通过 implements CheckpointedFunction 的形式控制批量刷新state，以下例子略去该优化。
+>         keyed state 一样可以通过 implements CheckpointedFunction 的形式控制批量刷新state，以下例子略去该优化。
 
 ```
 import org.apache.flink.api.common.state.ValueState;
@@ -456,7 +456,7 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
      * @throws Exception 异常
      */
     public static void main(String[] args) throws Exception {
-        StreamExecutionEnvironment env = TestUtil.iniEnv(1);
+        StreamExecutionEnvironment env = env.TestUtil.iniEnv(1);
         env.addSource(new TestSource("TestProcessFunction", buildSource()))
                 .map(e -> {
                     Tuple2<Long, Long> temp = new Tuple2<Long, Long>();
@@ -475,15 +475,15 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
 
 ## 2. State TTL & State 清除
 
-> ​       1.14 版本至今也只支持`process time` 的`State TTL`。`State TTL`是懒删除，只有读取、修改的时候才会检测是否删除，然后标记删除，对应后端执行内部`TTL`删除逻辑(**无法删除不再访问的`key`**)。
+>        1.14 版本至今也只支持`process time` 的`State TTL`。`State TTL`是懒删除，只有读取、修改的时候才会检测是否删除，然后标记删除，对应后端执行内部`TTL`删除逻辑(**无法删除不再访问的`key`**)。
 >
-> ​      假如需要主动删除(**删除不再访问的key**)，需要自定义 `timer` 定期删除状态(timer大量调用时，会引发性能问题)。`Sql` 中可以使用`setIdleStateRetentionTime`实现。
+>       假如需要主动删除(**删除不再访问的key**)，需要自定义 `timer` 定期删除状态(timer大量调用时，会引发性能问题)。`Sql` 中可以使用`setIdleStateRetentionTime`实现。
 
 ### 2.1 State TTL
 
 - TTL 作用
 
-​    长期使用`state`会导致state过大，一般业务上能清除一些历史`state`如：昨天的`pv`,`uv`等。通过配置TTL 就能实现`state`清除。
+    长期使用`state`会导致state过大，一般业务上能清除一些历史`state`如：昨天的`pv`,`uv`等。通过配置TTL 就能实现`state`清除。
 
 - **TTL 使用须知**
 
@@ -500,8 +500,8 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
 2. 增量删除：
 
    >  cleanupIncrementally (只对 memory 后端有效)
-   >
-   >  假如 memory 后端配置为同步写入时候，由于同步写入禁止并发，会导致内存使用增长(会保留所有数据，删除无效)。
+   > 存储后端的所有状态条目上维护一个全局的惰性迭代器。某些事件（例如状态访问）会触发增量清理，而每次触发增量清理时，迭代器都会向前遍历删除已遍历的过期数据
+   >  假如 memory 后端配置为同步写入时候，由于同步写入禁止并发，会导致内存使用增长(会保留所有数据，删除无效)。**每一次cleanup条目不能过多，否则会有严重性能问题。**
 
 3. RocksDB 专用删除：cleanupInRocksdbCompactFilter
 
@@ -524,7 +524,7 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
 
 reference: https://cloud.tencent.com/developer/article/1452844
 
-​       对应的 `state` 会被 `AbstractTtlDecorator` 类包装在一起，`AbstractTtlDecorator` 提供了 `TTL` 逻辑操作，控制每一次读，调用`TTL`逻辑。TTL 清除核心方法是`getWrappedWithTtlCheckAndUpdate `。
+       对应的 `state` 会被 `AbstractTtlDecorator` 类包装在一起，`AbstractTtlDecorator` 提供了 `TTL` 逻辑操作，控制每一次读，调用`TTL`逻辑。TTL 清除核心方法是`getWrappedWithTtlCheckAndUpdate `。
 
 - 以 TtlMapState 为例说明源码工作过程
 

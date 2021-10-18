@@ -1,6 +1,11 @@
 # Flink-4-数据类型和序列化
 
-`Flink` 针对不同的数据类型采取不同序列化策略，以节省内存、网络的开销。`Flink`序列化应用于网络数据交换和内存管理中，其中**内存管理是应用在`Batch`模式**下的`MemoryManager`中用于处理`sort`，`join`，`shuffle`等操作。数据类型的声明必须在`execute()`, `print()`, `count()`, or `collect()` 方法调用前确定。
+> reference:
+> https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/datastream/fault-tolerance/state/
+> http://wuchong.me/blog/2016/04/29/flink-internals-memory-manage/ (MemoryManager 内存相关)
+
+
+`Flink` 针对不同的数据类型采取不同序列化策略，以节省内存、网络的开销。`Flink`序列化应用于网络数据交换和内存管理中，其中**内存管理是如今只应用在`Batch`模式**下的`MemoryManager`中用于处理`sort`，`join`，`shuffle`等操作。数据类型的声明必须在`execute()`, `print()`, `count()`, or `collect()` 方法调用前确定。
 
 
 - Flink 序列化调用图
