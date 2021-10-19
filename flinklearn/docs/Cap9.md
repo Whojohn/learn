@@ -475,7 +475,7 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
 
 ## 2. State TTL & State 清除
 
->        1.14 版本至今也只支持`process time` 的`State TTL`。`State TTL`是懒删除，只有读取、修改的时候才会检测是否删除，然后标记删除，对应后端执行内部`TTL`删除逻辑(**无法删除不再访问的`key`**)。
+>        1.14 版本至今也只支持`process time` 的`State TTL`。`State TTL`是懒删除，只有读取、修改的时候才会检测是否删除，然后标记删除，对应后端执行内部`TTL`删除逻辑，**不再访问的`key`会有不同的删除触发策略**。
 >
 >       假如需要主动删除(**删除不再访问的key**)，需要自定义 `timer` 定期删除状态(timer大量调用时，会引发性能问题)。`Sql` 中可以使用`setIdleStateRetentionTime`实现。
 
@@ -500,7 +500,7 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
 2. 增量删除：
 
    >  cleanupIncrementally (只对 memory 后端有效)
-   > 存储后端的所有状态条目上维护一个全局的惰性迭代器。某些事件（例如状态访问）会触发增量清理，而每次触发增量清理时，迭代器都会向前遍历删除已遍历的过期数据
+   > 存储后端的所有状态条目上维护一个全局的惰性迭代器。**某些事件（例如状态访问）会触发增量清理，而每次触发增量清理时，迭代器都会向前遍历删除已遍历的过期数据，这样确保了不再访问key的删除。**
    >  假如 memory 后端配置为同步写入时候，由于同步写入禁止并发，会导致内存使用增长(会保留所有数据，删除无效)。**每一次cleanup条目不能过多，否则会有严重性能问题。**
 
 3. RocksDB 专用删除：cleanupInRocksdbCompactFilter

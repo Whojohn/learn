@@ -17,3 +17,6 @@
 -  [Flink-8-双流join](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap7.md)
 
 -  [Flink-9-state](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap9.md)
+
+
+-  [Flink-10-容错&checkpoint](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap10.md)
