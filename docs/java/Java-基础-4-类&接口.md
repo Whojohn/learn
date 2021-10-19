@@ -1,4 +1,4 @@
-# Java-基础-4-类
+# Java-基础-4-类&接口
 
 reference:
 
