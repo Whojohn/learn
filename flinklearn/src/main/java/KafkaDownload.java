@@ -1,3 +1,4 @@
+import env.TestUtil;
 import org.apache.flink.api.common.serialization.SimpleStringEncoder;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.core.fs.Path;
@@ -24,9 +25,8 @@ public class KafkaDownload {
             put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         }};
 
-
         config.keySet().forEach(e -> kafkaProperties.put(e, config.get(e)));
-        env.addSource(new FlinkKafkaConsumer<>("facebook", new SimpleStringSchema(), kafkaProperties).setStartFromEarliest())
+        env.addSource(new FlinkKafkaConsumer<>("news", new SimpleStringSchema(), kafkaProperties).setStartFromEarliest())
                 .addSink(StreamingFileSink
                         .forRowFormat(new Path("hdfs://test:9000/test/facebook"), new SimpleStringEncoder<String>("UTF-8"))
                         .withRollingPolicy(

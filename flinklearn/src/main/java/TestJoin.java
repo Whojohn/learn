@@ -1,3 +1,4 @@
+import env.TestUtil;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -78,6 +79,7 @@ public class TestJoin {
         StreamExecutionEnvironment env = TestUtil.iniEnv(1);
         env.getConfig().setAutoWatermarkInterval(200L);
 
+        
 
         // order
         String[] names = new String[]{"eve_time", "order"};

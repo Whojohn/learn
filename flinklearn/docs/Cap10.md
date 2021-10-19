@@ -33,7 +33,7 @@
 
 - Checkpoint 底层（Checkpoint 与 State 关系，State 与数据类型关系）？
 
-    分布式快照 -> `state`+`state backed`； **`State`  中也包含了数据类型信息。**
+  分布式快照 -> `state`+`state backed`； **`State`  中也包含了数据类型信息。**
 
 
 - 不同的状态后端对于`Checkpoint` (`State`)的处理不同(state )？ 
@@ -53,26 +53,26 @@
 ### 2.1.1 分布式快照Chandy-Lamport 算法
 
 - Checkpoint 的完成(先不考虑图中并行度不一致的情况)
-![数据流中的检查点障碍](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Cap10-stream_barriers.svg?raw=true)
+  ![数据流中的检查点障碍](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Cap10-stream_barriers.svg?raw=true)
 
 
 ![数据流中的检查点Barrier](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Cap10-stream_barriers.svg?raw=true)
 
          如上图所示，`Checkpoint` 整体控制流程由`Jobmanager`触发和最终确认提交。基础步骤如下：
-
+    
           1.  `Checkpoint`机制由`Jobmanger`通过数据源中插入`barrier`标识。
           2.  `TaskManger`中的算子接收到了`Checkpoint`后(`Barrier`标识)，假如使用了`State`，则将当前的状态`Flush`到`State backend`中，成功后通知`TaskManger`写入成功(假如使用`Jobmanager`是`Ha`会把这个这个信息写入到如：`Zookeeper`，`etcd`中)， 并且向后依次传递`Barrier`标识，让下游算子完成持久化的过程。
           3.  重复执行以上步骤，当`Jobmanger`收到所有`TaskManager`通知`State`写入`State Backend`，此时`Checkpoint`完成。
 
 - Checkpoint 恢复
 
-       `JobManger`找到最后一个完整的`Checkpoint`，把`Checkpoint`信息恢复到 `Jobmanger`中，`Jobmanger` 以这个信息重启任务，各个`Slot`按照`Jobmanger` 下发的信息信息，读取`State`恢复到本地，任务重启成功。
+      `JobManger`找到最后一个完整的`Checkpoint`，把`Checkpoint`信息恢复到 `Jobmanger`中，`Jobmanger` 以这个信息重启任务，各个`Slot`按照`Jobmanger` 下发的信息信息，读取`State`恢复到本地，任务重启成功。
 
 #### 2.1.2 并行度不一致&数据重分区&多数据源问题(Barrier 对齐机制)
 
 - 并行度不一致 & 数据重分区 & 多数据源存在的问题
 
-         `Checkpoint barrier` 是由数据源产生的，假如出现以上情况，会导致一个算子，接收的数据是由含有多个数据源`Barrier`，为了实现数据的`exactly-once ` 机制。必须保证所有`Barrier`恰好到来才执行`State`持久化，不然数据会多算。
+      `Checkpoint barrier` 是由数据源产生的，假如出现以上情况，会导致一个算子，接收的数据是由含有多个数据源`Barrier`，为了实现数据的`exactly-once ` 机制。必须保证所有`Barrier`恰好到来才执行`State`持久化，不然数据会多算。
 
 
 
@@ -80,11 +80,11 @@
 
 - Barrier 对齐机制
 
-        如上图，`state`持久化的操作必须等待`e`数据前的数据到来才可以操作。同时也必须停止`1`数据源的消费(假如`At least once` `1`数据源继续保持消费)，直至`e` 到来，这个过程就叫做`Barrier 对齐`。**注意，一般来说，假如下游不存在重新数据分区，对齐后的下游，没有对齐这个消耗。**
+      如上图，`state`持久化的操作必须等待`e`数据前的数据到来才可以操作。同时也必须停止`1`数据源的消费(假如`At least once` `1`数据源继续保持消费)，直至`e` 到来，这个过程就叫做`Barrier 对齐`。**注意，一般来说，假如下游不存在重新数据分区，对齐后的下游，没有对齐这个消耗。**
 
 - Barrier 对齐机制缺陷
 
-       Barrier 对齐必须停止某一路数据源的消费，会增加耗时。特别在存在数据倾斜时，系统吞吐会进一步降低。
+      Barrier 对齐必须停止某一路数据源的消费，会增加耗时。特别在存在数据倾斜时，系统吞吐会进一步降低。
 
 ## 2.2 Unaligned Checkpoint 原理
 
@@ -142,4 +142,81 @@ Configuration config = new Configuration();
 config.set(ExecutionCheckpointingOptions.ENABLE_CHECKPOINTS_AFTER_TASKS_FINISH, true);
 env.configure(config);
 ```
+
+## 4. 端到端一致性(2PC)
+
+> reference:
+>
+> https://zhuanlan.zhihu.com/p/94679136
+>
+> 
+>
+> Checkpoint 只能解决内部数据的准确性，要确保输出端也做到数据`exactly-once`的准确性，必须做到：输出源也支持幂等性操作。Flink 内部源通过`2PC`机制，只要外部源支持幂等，即可保障`exactly-once`操作。
+
+### 4.1 Flink 中2pc 机制 & TwoPhaseCommitSinkFunction
+
+> Flink 中输出源支持`exactly-once`必须继承`TwoPhaseCommitSinkFunction`类
+
+- 2pc 机制
+
+Phase 1: Pre-commit
+
+1. `Flink`的`JobManager`从`source`开始注入`checkpoint barrier`以开启这次`snapshot`，`barrier`从`source`流向`sink`。
+
+2. 每个进行`snapshot`的算子成功`snapshot`后,都会向`JobManager`发送`ACK`。
+
+3. `sink`进行`snapshot`时, 向`JobManager`发送ACK的同时向`kafka`进行`pre-commit`(实际上只要当前批次都开启事务，这里不提交事务即可)。
+4. 至此，`pre-commit`阶段完成。
+
+Phase 2 : Commit
+
+1. 当`JobManager`接收到所有算子的`ACK`后，`pre-commit`阶段完成，此时`checkpoint`也完成成功，`Jobmanager`向所有`Sink`算子发送`Commit`请求。
+
+2. `Sink`接收到这个通知后, 就向kafka进行commit(Kafka中就是把这个checkpoint 范围内的批次事务，标记为提交)。
+
+- 异常处理
+
+1. 异常发生在`pre-commit`阶段
+
+> 丢弃当前状态(`abort`)，系统恢复到最近的checkpoint，
+
+2. 异常发生在`commit`阶段
+
+> 此时系统已经完成`checkpoint`，将状态恢复至`checkpoint`，重复进行`commit`。**注意，commit必须成功，不然会一直发生重启，以保证数据正确。**
+
+
+
+- TwoPhaseCommitSinkFunction 核心方法
+
+```
+	// 初始化一个事务
+	protected abstract TXN beginTransaction() throws Exception;
+    // 每一条数据的插入逻辑
+    protected abstract void invoke(TXN transaction, IN value, Context context) throws Exception;
+	// 第一阶段提交
+	// 注意，数据的第一阶段提交一般插入逻辑都放入到invoke中，这里只是一个操作外部源连接的一个管理
+	protected abstract void preCommit(TXN transaction) throws Exception;
+
+	// 所有sink 第一阶段执行提交，执行第二阶段提交。假如发生异常，会调用 recoverAndCommit 方法直至成功
+	protected abstract void commit(TXN transaction);
+	// 默认 commit 异常恢复逻辑
+    // commit 阶段异常，恢复会调用 recoverAndCommit 直至成功，因此第二阶段 commit 不能引发异常
+    protected void recoverAndCommit(TXN transaction) {
+        commit(transaction);
+    }
+	// 事务回滚
+	protected abstract void abort(TXN transaction);
+```
+
+### 4.2 2pc 思考
+
+- 2pc 为什么可靠
+
+> 2pc 配合`checkpoint`解决了 `Flink` ,`Source`都不稳定的情况下，数据的正确性（不丢失，不多）。
+
+- mysql 等不支持2pc 的如何保障
+
+> 可以把2pc 阶段写统一外部源改为：先写外部文件，后写mysql。**这样做的缺点：假如mysql 插入失败，会导致任务一直卡在这个checkpoint 上不停重启。跟第一阶段失败不一样，改变了处理逻辑，也会卡住在这里。**
+
+
 
