@@ -193,14 +193,13 @@ System.out.println(d1 - d2);
 
 ```
 
- 2.. ==(!=) 符号 vs equal (包装类对比使用equal)
+ 2.. ==(!=) 符号 vs equal (包装类对比使用equal) vs hashcode
 
 > - ==(!=) 
 >   == 默认对比的是对象内存地址
 > - equal 对比对象的内容(约定俗成， 继承于Object 类的方法)
 >   对于自己的类，要重写 equal 方法，必须同时重写 hashcode 方法。保证两
->   个相同内容hashcode返回值一致，且equal 返回True 时，equal 才能确保两
->   者内容一致。
+>   个相同内容hashcode返回值一致，且equal 返回True 时，equal 才能确保两者内容一致。**注意,Object 类中 hashcode（默认hashcode）方法是利用地址+某些信息构建的hashcode,改变对象的任何参数，除非改变引用，不然hashcode 不会改变。**
 
  ```
 int i1 = 1;
