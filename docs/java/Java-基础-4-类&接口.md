@@ -276,9 +276,9 @@ reference :
 ```
 // temp 准备阶段，分配内存，将会被**初始化为0**；
 public static int temp = 3;
-// default 准备阶段,分配内存，将会被**初始化为3**；
+// default 准备阶段,分配内存，将会被**初始化为3**,因为final 修饰；
 final  public static int default = 3;
-// refertypeInteger 准备阶段，分配内存，初始化为null;
+// refertypeInteger 准备阶段，分配内存，初始化为null, 基础数据类型会直接绑定数据，类会绑定null；但是 **String** 会初始化为对应值，String 特殊，应该是变量池引发的;
 final  public static Integer refertypeInteger = 3;
 // 准备阶段，什么也不做。
 public String website = "aaai";
