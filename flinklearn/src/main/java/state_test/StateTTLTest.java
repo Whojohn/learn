@@ -29,7 +29,7 @@ public class StateTTLTest extends ProcessFunction<Tuple2<String, Long>, Tuple2<S
         ValueStateDescriptor source = new ValueStateDescriptor("post_id", Types.TUPLE(Types.STRING, Types.LONG));
         StateTtlConfig ttlConfig = StateTtlConfig.newBuilder(Time.seconds(60 * 60 * 2))
                 .setUpdateType(StateTtlConfig.UpdateType.OnCreateAndWrite)
-                .setStateVisibility(StateTtlConfig.StateVisibility.ReturnExpiredIfNotCleanedUp)
+                .setStateVisibility(StateTtlConfig.StateVisibility.NeverReturnExpired)
                 .cleanupIncrementally(100, false)
                 .build();
         source.enableTimeToLive(ttlConfig);

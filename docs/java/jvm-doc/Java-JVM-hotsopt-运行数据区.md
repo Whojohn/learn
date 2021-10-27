@@ -12,7 +12,7 @@
 
 > 注意！！！jmm 是 java 内存模型，说的是 volatile 相关的问题，与jvm 没有必然联系！！！https://en.wikipedia.org/wiki/Java_memory_model
 
-![jvm 架构](https://github.com/Whojohn/learn/blob/master/docs/java/pic/jvm-arch.png?raw=true)
+![jvm 架构](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/jvm-arch.png?raw=true)
 
 ### 1.1 栈(内存不共享区域)
 
@@ -121,15 +121,15 @@ Survivor：`Eden` 与 `Survivor` 比率是`4：1`，两者构成标记复制算�
 > 当经过`对象回收判定`算法的标识过可以回收的内存区域，下一步就是通过垃圾回收算法，回收这些空间。Hotspot 中假如使用分代模型，一般年轻代使用是复制，老年代使用的是：清除或者是整理(cms 是先清除，后整理)。
 
 #### 2.2.1 标记-清除
-![标记-清除](https://github.com/Whojohn/learn/blob/master/docs/java/pic/jvm-gc-mark-sweep.jpg?raw=true)
+![标记-清除](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/jvm-gc-mark-sweep.jpg?raw=true)
 
 #### 2.2.2 标记-整理
 
-![标记-整理](https://github.com/Whojohn/learn/blob/master/docs/java/pic/jvm-gc-mark-compact.jpg?raw=true)
+![标记-整理](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/jvm-gc-mark-compact.jpg?raw=true)
 
 #### 2.2.3 复制(Eden,Survivor的存在的意义)
 
-![复制](https://github.com/Whojohn/learn/blob/master/docs/java/pic/jvm-gc-copying.jpg?raw=true)
+![复制](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/jvm-gc-copying.jpg?raw=true)
 
 ### 2.3 垃圾收集器
 
@@ -159,19 +159,19 @@ Survivor：`Eden` 与 `Survivor` 比率是`4：1`，两者构成标记复制算�
 
 GC 会 `STW`。
 
-![Serial 收集器](https://github.com/Whojohn/learn/blob/master/docs/java/pic/gc-serial.jpg?raw=true)
+![Serial 收集器](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/gc-serial.jpg?raw=true)
 
 #### 2.3.2  ParNew 收集器
 
 **ParNew 收集器其实就是 Serial 收集器的多线程版本，除了使用多线程进行垃圾收集外，其余行为和 Serial 收集器完全一样。**
 
-![ParNew 收集器](https://github.com/Whojohn/learn/blob/master/docs/java/pic/gc-parnew.jpg?raw=true)
+![ParNew 收集器](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/gc-parnew.jpg?raw=true)
 
 ### 2.3.3 CMS 收集器(只应用于老年代中)
 
 > gc 时候先尝试使用标记-清除，假如剩余空间不足，使用标记-整理算法处理。
 
-![cms](https://github.com/Whojohn/learn/blob/master/docs/java/pic/gc-cms.jpg?raw=true)
+![cms](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/gc-cms.jpg?raw=true)
 
 - `cms old gc`工作流程如下
 

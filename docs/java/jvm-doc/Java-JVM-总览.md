@@ -10,7 +10,7 @@
 
 ## 2. JVM 包含了几个部分
 
-![jvm 架构](https://github.com/Whojohn/learn/blob/master/docs/java/pic/jvm-arch.png?raw=true)
+![jvm 架构](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/jvm-arch.png?raw=true)
 
 > ps 这个部分十分混乱，oracle jvm 标准划分比较混乱
 >
