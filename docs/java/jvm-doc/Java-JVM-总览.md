@@ -10,7 +10,7 @@
 
 ## 2. JVM 包含了几个部分
 
-![img](https://img-blog.csdn.net/20170610165140237?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvYWlqaXVkdQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center)
+![jvm 架构](https://github.com/Whojohn/learn/blob/master/docs/java/pic/jvm-arch.png?raw=true)
 
 > ps 这个部分十分混乱，oracle jvm 标准划分比较混乱
 >
@@ -90,6 +90,7 @@
 - 分区担保
 - 动态老年代
 - cms 浮动垃圾
+> GC 线程和用户线程并发执行，这个过程当然可能会因为线程的交替执行而导致新产生的垃圾（即浮动垃圾）没有被标记到；
 
 ### 3.3 对象相关
 
