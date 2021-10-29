@@ -43,9 +43,10 @@ Java 容器部分依赖了以下这些技术：
 
 3. fail-fast( `java.util.ConcurrentModificationException`异常  )
 
-> 当迭代容器，多线程操作容器时候，只要容器结构发生变化，引发该异常。
+- 当迭代容器；多线程操作容器时候，只要容器结构发生变化，引发该异常。
 
 ```
+# 迭代修改变量，引发错误
         List<Integer> temp = new ArrayList<Integer>() {{
             add(1);
             add(2);
@@ -57,6 +58,22 @@ Exception in thread "main" java.util.ConcurrentModificationException
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1543)
 	at LambdaTest.main(LambdaTest.java:15)
 ```
+- 假如需要迭代时候修改变量如何安全实现呢？
+```
+# 使用 iter 对象进行删除
+List<String> list = new ArrayList<>();
+list.add("1");
+list.add("2");
+list.add("3");
+Iterator temp = list.listIterator();
+while (temp.hasNext()) {
+    if (temp.next() == "2") temp.remove();
+}
+```
+
+- fail-fast 底层原理
+> 容器中有个`modCount`变量，每一个修改或者是增加后假如`modCount`与预期逻辑不对(如：并发插入，正常来说`modcount`!=预期长度；遍历时候`modcount`大小改变了)
+
 
 4. 常用接口：
 
@@ -110,7 +127,7 @@ Copy source:
 
   1. 写时复制集合：CopyOnWriteArrayList、CopyOnWriteArraySet  ；
   2. 比对交换集合(CAS): ConcurrentLinkedQueue、ConcurrentSkipListMap
-  3. 对象锁：LinkedBlockingQueue，ConcurrentHashMap ，BlockingQueue。
+  3. 对象锁(ReentrantLock)：LinkedBlockingQueue，ConcurrentHashMap ，BlockingQueue。
 
 不推荐使用Collections.synchronizedXXX 修饰对应的集合保证数据安全，因为性能低下。
 

@@ -48,7 +48,7 @@ https://tech.meituan.com/2018/11/15/java-lock.html
 
 ### 1.5 无锁 VS 偏向锁 VS 轻量级锁 VS 重量级锁 (synchronized 的优化)
 
-**具体内容见`synchronized`底层**
+**具体内容见`synchronized`底层,!!!注意sync是从偏向锁向上转化。(除非是编译器优化，消除锁，不然不会有无锁。)!!!**
 
 ### 1.6 独享锁 VS 共享锁
 
