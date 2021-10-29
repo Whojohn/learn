@@ -47,8 +47,6 @@
               └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
 ```
 
-
-
   ![数据流中的检查点障碍](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap11-memory-arch.png?raw=true)
 
 
@@ -56,17 +54,16 @@
 
   该部分使用JVM 中堆内存，内部没有严格划分，可以混合使用该内存部分。因此监控把框架使用和用户使用部分都放入到一个部分，进行监控。
 
-
-
-### 1.1 Framework Heap
-
-  框架使用的内存
-
 - 控制方法
 
 taskmanager.memory.task.heap.size+taskmanager.memory.framework.heap.size
 
 > 默认计算方式是：taskmanager.memory.task.heap.size+taskmanager.memory.framework.heap.size= Total Flink Memory – Framework Heap –  Managed Memory – Network Memory
+
+
+### 1.1 Framework Heap
+
+  框架使用的内存
 
 ### 1.2 Task Heap
 

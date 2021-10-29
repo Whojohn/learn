@@ -19,3 +19,5 @@
 -  [Flink-9-state](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap9.md)
 
 -  [Flink-10-容错&checkpoint](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap10.md)
+
+-  [Flink-11-内存配置相关](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap11.md)
