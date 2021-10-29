@@ -8,13 +8,13 @@
 
 -  [Flink-4-数据类型和序列化](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap4.md)
 
--  [Flink-5-operators](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap4.md)
+-  [Flink-5-operators](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap5.md)
 
--  [Flink-6-时间](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap5.md)
+-  [Flink-6-时间](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap6.md)
 
--  [Flink-7-窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap6.md)
+-  [Flink-7-窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap7.md)
 
--  [Flink-8-双流join](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap7.md)
+-  [Flink-8-双流join](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap8.md)
 
 -  [Flink-9-state](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap9.md)
 
