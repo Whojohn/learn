@@ -20,6 +20,18 @@ ES 的底层是`lucene`，因此很多概念都是从`lucene`过来的有必要�
 - mapping（映射）：`index`对应唯一的`mapping`，相当于表结构
 - field(单个字段)
 - field  datatype（单个字段数据格式）
+- field 保留字段（metadata)
+
+> _id：文档`id`，多个`index`中`_id`可以相同，单个`index`中`_id`唯一
+>
+> _type（type）：7后不可选
+>
+> _source：原始完整文档
+>
+> _routing：路由方式，用于自定义路由，默认是根据`_id`进行`hash%分片数`定位
+>
+> _ignore: 忽略索引
+
 
 ## 1.1 Lucene 数据组织方式
 
@@ -60,4 +72,3 @@ ES 的底层是`lucene`，因此很多概念都是从`lucene`过来的有必要�
 
 - shard：分片
 - replica:副本
-
