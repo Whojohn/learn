@@ -4,7 +4,7 @@
 >
 > https://www.elastic.co/guide/en/elasticsearch/reference/7.15/mapping-types.html
 
-![数据类型](https://github.com/Whojohn/learn/blob/master/docs/es/pic/数据类型(Field+data+type).svg?raw=true)
+![数据类型](https://github.com/Whojohn/learn/blob/master/docs/es/pic/%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B(Field%2Bdata%2Btype).svg?raw=true)
 
 **注意**
 
@@ -97,11 +97,11 @@ GET test_index/_search
 
 - 使用场景
 
-​        用于代码，安全审计领域，等非正常组织文本。如高频出现高基数特殊优化的字段如：NoSuchFile  `*such` 查询 。
+        用于代码，安全审计领域，等非正常组织文本。如高频出现高基数特殊优化的字段如：NoSuchFile  `*such` 查询 。
 
 - 底层原理
 
-​        底层利用所有字符串的每隔3个字符的`ngram`缩小正则匹配的代价，以`ngram`进行粗选。然后利用一个`bytes`代表的原始日志，进行精确定位。
+        底层利用所有字符串的每隔3个字符的`ngram`缩小正则匹配的代价，以`ngram`进行粗选。然后利用一个`bytes`代表的原始日志，进行精确定位。
 
 ### 2.2 Text
 
@@ -122,7 +122,7 @@ GET test_index/_search
 
 - 注意事项
 
-​      `fieldata`消耗内存较多，必须配置`fielddata_frequency_filter`过滤频次过低的文本，`term_vector`消耗物理空间比较多，`term_vector`只能查询单个文档的词频，并且返回的结果只能是单个`shard`的结果。解决了：`词频率`，`词云`，`text字段查询词频率`等相关问题如：
+      `fieldata`消耗内存较多，必须配置`fielddata_frequency_filter`过滤频次过低的文本，`term_vector`消耗物理空间比较多，`term_vector`只能查询单个文档的词频，并且返回的结果只能是单个`shard`的结果。解决了：`词频率`，`词云`，`text字段查询词频率`等相关问题如：
 
    >- Q1：Elasticsearch可以根据检索词在doc中的词频进行检索排序嘛？
    >- Q2：求教 ES 可以查询某个索引中某个text类型字段的词频数量最大值和词所在文档数最大值么？例：索引中有两个文档 doc1：{"text":"*"}  分词结果有两个北京，一个南京 doc2：{"text":"*"} 分词结果有一个北京想要一下结果：北京：词频3，文档量2 南京：词频1，文档量1
