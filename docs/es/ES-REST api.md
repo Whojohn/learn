@@ -235,6 +235,52 @@ POST /my-index-000001/_delete_by_query
 }
 ````
 
+### 1.5 Mulit 操作
+
+ #### 1.5.1 Reindx
+
+> 默认 reindex 不会改变 `_id`号
+
+- 基本语法
+
+```
+POST _reindex?slices=6?requests_per_second=-1
+{
+  "source": {
+    "index": "",
+    "size": 10000
+  },
+  "dest": {
+    "index": "",
+    "version_type": ""
+  }
+}
+```
+
+- 核心配置
+
+1. version_type：external ，保留`_version`信息。
+2. conflicts，失败策略，proceed 会继续执行
+
+#### 1.5.2 bulk
+
+> 执行方式`index`，`create`，`delete`，和`update`
+
+- 基本语法
+
+```
+POST _bulk
+{ "index" : { "_index" : "test" } }
+{ "field1" : "value1" }
+{ "delete" : { "_index" : "test", "_id" : "2" } }
+{ "create" : { "_index" : "test", "_id" : "3" } }
+{ "field1" : "value3" }
+{ "update" : {"_id" : "1", "_index" : "test"} }
+{ "doc" : {"field2" : "value2"} }
+```
+
+
+
 
 
 
