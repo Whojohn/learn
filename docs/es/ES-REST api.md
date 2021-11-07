@@ -5,6 +5,8 @@
 > https://www.elastic.co/guide/en/elasticsearch/reference/current/rest-apis.html
 
     `REST api` 中包含集群所有的接口，常用的接口是`集群管理相关（cluster,index,snapshot）`和`文档接口(CURD)`。这里主要介绍`CURD`还有基础的`cluster`和`index`常用接口。
+![rest_api](https://github.com/Whojohn/learn/blob/master/docs/es/pic/REST_api.svg?raw=true)
+
 
 ## 1. Document api(CURD&Multi操作)
 
