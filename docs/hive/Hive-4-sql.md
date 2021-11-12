@@ -6,6 +6,10 @@
 >
 >https://github.com/wangzhiwubigdata/God-Of-BigData/blob/master/%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0/Hive%E6%95%B0%E6%8D%AE%E6%9F%A5%E8%AF%A2%E8%AF%A6%E8%A7%A3.md （尚硅谷的数据集）
 
+
+![sql](https://github.com/Whojohn/learn/blob/master/docs/hive/pic/sql.svg?raw=true)
+
+
 - 注意
 
 
