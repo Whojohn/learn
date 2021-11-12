@@ -524,7 +524,67 @@ insert into table login_date values("A","2018-09-04"),
 select use from (select use,datediff(login,lag(login,2) over(partition by use order by login asc)) as la from (select use,login from login_date group by use,login) as t ) as lag where la=2;
 ```
 
+### 4. 行列转换
 
+> reference:
+>
+> https://cwiki.apache.org/confluence/display/Hive/LanguageManual+LateralView
+>
+> https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF
+
+| 函数名                                       | 作用                                         |
+| -------------------------------------------- | -------------------------------------------- |
+| collect_set                                  | 返回一个不重复的集合                         |
+| concat                                       | 合并多个字符                                 |
+| concat_ws(string SEP, string A, string B...) | 自定义分隔符，合并多个字符                   |
+| explode（udtf 函数）                         | 输入一行，输出多行，需要配合 later view 实现 |
+
+- 样例
+
+```
+# 列转行
+# emp 表中，把同部门，相同的职位的人在一列中显示
+select deptno,job,collect_set(ename) from emp group by deptno,job;
++---------+------------+-------------------------------------+
+| deptno  |    job     |                 _c2                 |
++---------+------------+-------------------------------------+
+| 20      | ANALYST    | ["SCOTT","FORD"]                    |
+| 10      | CLERK      | ["MILLER"]                          |
+| 20      | CLERK      | ["SMITH","ADAMS"]                   |
+| 30      | CLERK      | ["JAMES"]                           |
+| 10      | MANAGER    | ["CLARK"]                           |
+| 20      | MANAGER    | ["JONES"]                           |
+| 30      | MANAGER    | ["BLAKE"]                           |
+| 10      | PRESIDENT  | ["KING"]                            |
+| 30      | SALESMAN   | ["ALLEN","WARD","MARTIN","TURNER"]  |
++---------+------------+-------------------------------------+
+
+# 行转列
+# 把上面的结果拆开成单行
+
+select deptno,job from (select deptno,job,collect_set(ename) as ename from emp group by deptno,job)  as t
+LATERAL VIEW explode(ename) myTable1 AS ename;
+
++---------+------------+
+| deptno  |    job     |
++---------+------------+
+| 10      | CLERK      |
+| 10      | MANAGER    |
+| 10      | PRESIDENT  |
+| 20      | ANALYST    |
+| 20      | ANALYST    |
+| 20      | CLERK      |
+| 20      | CLERK      |
+| 20      | MANAGER    |
+| 30      | CLERK      |
+| 30      | MANAGER    |
+| 30      | SALESMAN   |
+| 30      | SALESMAN   |
+| 30      | SALESMAN   |
+| 30      | SALESMAN   |
++---------+------------+
+
+```
 
 
 
