@@ -19,6 +19,9 @@
 ## 1. DDL Database 级别操作
 
 ### 1.1 Create (新建库)
+- 注意
+1. `hive`中`database`,`table`,`view`，以及`表名`，`列名`,不区分大小写。
+2. `database`,`table`,`view`中名字不能包含`-`符号。
 
 ```
 CREATE  (DATABASE|SCHEMA) [IF NOT EXISTS] database_name
@@ -93,6 +96,8 @@ DROP TEMPORARY FUNCTION [IF EXISTS] function_name;
 >       虽然`hive 3`支持物化视图，但是很多特性还是非`ga`状态，见：https://cwiki.apache.org/confluence/display/Hive/Materialized+views；因此不讨论物化视图的操作。
 >
 >         创建的表结构可以通过`desc xxx`，` desc formatted xxx`，`show create table`查看信息。
+>  `hive`中`database`,`table`,`view`，以及`表名`，`列名`,不区分大小写。
+ > `database`,`table`,`view`中名字不能包含`-`符号。
 >
 >         可以通过`CTAS`方式建表，如`create table xxx as selec xxx`;
 >
