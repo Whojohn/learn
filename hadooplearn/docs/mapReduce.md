@@ -24,7 +24,7 @@
 ![mapreduce处理详细流程](https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/pic/map_reduce_detail_process.png?raw=true)
 
 
-![mapreduce处理大致流程](mapreduce_process.png)
+![mapreduce处理大致流程](https://raw.githubusercontent.com/Whojohn/learn/master/hadooplearn/docs/pic/mapreduce_process.png)
 
 
 ## 1. Map 阶段
