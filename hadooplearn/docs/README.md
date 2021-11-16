@@ -14,6 +14,9 @@
 - yarn 架构
 > https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/yarnArchitecture.md
 
+- mapreduce 处理流程&工作原理
+> https://github.com/Whojohn/learn/blob/master/hadooplearn/docs/mapReduce.md
+
 # 3. 线上排障&优化
 
 
