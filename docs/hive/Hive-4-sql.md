@@ -33,9 +33,9 @@
 > insert into  emp values (7369,"SMITH","CLERK",7902,"1980/12/17 0:00",800,Null,20),(7499,"ALLEN","SALESMAN",7698,"1981/2/20 0:00",1600,300,30),(7521,"WARD","SALESMAN",7698,"1981/2/22 0:00",1250,500,30),(7566,"JONES","MANAGER",7839,"1981/4/2 0:00",2975,Null,20),(7654,"MARTIN","SALESMAN",7698,"1981/9/28 0:00",1250,1400,30),(7698,"BLAKE","MANAGER",7839,"1981/5/1 0:00",2850,Null,30),(7782,"CLARK","MANAGER",7839,"1981/6/9 0:00",2450,Null,10),(7788,"SCOTT","ANALYST",7566,"1987/4/19 0:00",1500,Null,20),(7839,"KING","PRESIDENT",Null,"1981/11/17 0:00",5000,Null,10),(7844,"TURNER","SALESMAN",7698,"1981/9/8 0:00",1500,0,30),(7876,"ADAMS","CLERK",7788,"1987/5/23 0:00",1100,Null,20),(7900,"JAMES","CLERK",7698,"1981/12/3 0:00",950,Null,30),(7902,"FORD","ANALYST",7566,"1981/12/3 0:00",3000,Null,20),(7934,"MILLER","CLERK",7782,"1982/1/23 0:00",1300,Null,10);
 > 
 > CREATE TABLE dept(
->   deptno INT comment "部门编号",   
->   dname STRING comment "部门名称",  
->   loc STRING comment "部门所在的城市"   
+> deptno INT comment "部门编号",   
+> dname STRING comment "部门名称",  
+> loc STRING comment "部门所在的城市"   
 > );
 > 
 > insert into dept values (10,"ACCOUNTING","NEW YORK"),(20,"RESEARCH","DALLAS"),(30,"SALES","CHICAGO"),(40,"OPERATIONS","BOSTON");
@@ -57,7 +57,7 @@ SELECT [ALL | DISTINCT] select_expr, select_expr, ...
 
 
 
-### 1. 简单 select
+## 1. 简单 select
 
 ```
 select * from emp;
@@ -71,17 +71,17 @@ select deptno,sum(sal) from emp group by deptno having deptno>20;
 select deptno,sum(sal) from emp group by deptno having sum(sal)>9000;
 ```
 
-### 2. 复杂语法
+## 2. 复杂语法
 
 ### 2.1 order by vs sort by vs distribute by  vs cluster by  (排序)
 
 - order by 
 
-	`order by`会对所有数据进行全局排序。`order by` 会引发性能问题， 排序时，为了保证全局有序，都会放入到唯一的一个`reduce`中执行，因此一般只用`order by `都需要`limit `保证性能。
+  `order by`会对所有数据进行全局排序。`order by` 会引发性能问题， 排序时，为了保证全局有序，都会放入到唯一的一个`reduce`中执行，因此一般只用`order by `都需要`limit `保证性能。
 
 - sort by 
 
-     `sort by`会对`reduce`内的数据进行排序。注意`sort by`字段可能分配到多个`reduce`中。
+  `sort by`会对`reduce`内的数据进行排序。注意`sort by`字段可能分配到多个`reduce`中。
 
 - distribute by
 
@@ -125,6 +125,7 @@ select * from emp right join dept on emp.deptno=dept.deptno
 - full join
 
 ```
+# 保留左右两边无法关联的数据
 SELECT *
 FROM emp  FULL OUTER JOIN  dept 
 ON emp.deptno = dept.deptno;
@@ -137,22 +138,71 @@ SELECT *
 FROM emp  FULL OUTER JOIN  dept 
 ```
 
-#### 2.2.2 join 类型 & 优化
+### 2.2.2 join 实现类型 & 优化
 
-> 总结：
+> reference:
+> https://en.wikipedia.org/wiki/Sort-merge_join
 >
-> 1. hive 内部一般会分析大表和小表，默认开启不同的`join`类型进行优化。
-> 2. `join`的字段假如一致，如`a,b,c`三表都是`a`字段连接，那么将会转化为一个`map reduce`执行join。
+> https://www.jianshu.com/p/97e76dddcbfb
+
+```总结：
+1. hive 内部一般会分析大表和小表，默认开启不同的`join`类型进行优化。
+2. `join`的字段假如一致，如`a,b,c`三表都是`a`字段连接，那么将会转化为一个`map reduce`执行join。
+3. `hive join` 类型一般分为：`map join`，`common join`，`sort merge join`。
+```
+
+#### 2.2.2.1 join 原理
+
+> 不考虑分布式和框架的情况下，一般`join`实现主要有两种：`hash join`，`sort merge join`。以下`join`说明方式以`inner join`为例。
+
+- hash join
+
+将小表中`join key`进行`hash`，读取大表，依次利用`hash`查找小表中的记录。
+
+- sort merge join
+
+把`join`的左右表按照`join key`排序，从两表最小的`join key`开始，左右交替寻找最小`key`，当遍历左右表`key`相同时，`merge`，直至完成。
+
+- key 不唯一如何处理
+
+1. 把`key`相同的`value`放入到`list`中，`merge`时只需遍历即可。
+
+2. 重复`key`的`value`按列排序。迭代进行`merge`：
+
+   > <k1,t1>	<k1, v1>
+   >
+   > <k1,t2>	<k1, v2>
+   >
+   > step 1:
+   >
+   > <k1, t1, v1> <k1,t1,v2>
+   >
+   > step 2:(注意只滑动左手，右手需要判定`key`值是否存在重复，假如重复的话，需要确定左手的值与右手的值不一致才可以滑动)
+   >
+   > <k1, t2, v1> <k1,t2,v2>
 
 
+#### 2.2.2.2 hive 实现方式
 
-- Common join
+- Common join(hash join 实现)
 
-   两张表走`map reduce`，在`reduce`阶段进行`join`
+  两张表走`map reduce`，在`reduce`阶段进行`join`
+  
+![common_join](https://github.com/Whojohn/learn/blob/master/docs/hive/pic/common_join.png?raw=true)
 
 - map join & 优化
 
-   指定表执行`map join`操作，`map join`会把小表加载到内存中并且在`map`阶段进行`join`。大表为`streamtable` 可以通过`streamtable`关键字进行标识，小表为`mapjoin`。
+  指定表执行`map join`操作，`map join`会把小表加载到内存中并且在`map`阶段进行`join`。
+
+![map_join](https://github.com/Whojohn/learn/blob/master/docs/hive/pic/map_join.png?raw=true)
+
+- smb join（sort merge join）
+
+  `map`阶段数据进行排序，分组。两表进入到`reduce`阶段执行`sort merge join`逻辑。
+
+![sort_merge_join](https://github.com/Whojohn/learn/blob/master/docs/hive/pic/sort_merge_join.png?raw=true)
+
+- 语法声明
 
 ```
 # 说明大表位置
@@ -191,7 +241,7 @@ FROM a JOIN b ON a.key = b.key
 2. set hive.optimize.skewjoin=true; &hive.optimize.skewjoin=100000；（分阶段`join`，对于超过`100000`的连接值，单独进行`join`，可以通过配置更大的`map join`内存，使倾斜值走`mapjoin`）。
 3. set hive.optimize.skewjoin.compiletime=true;（只能用于`skew table`）
 
-### 3. 其他常用语法
+## 3. 其他常用语法
 
 ### 3.1 union 
 
@@ -319,7 +369,8 @@ values
 ('Haviva Montoya','Mike Palomino',2,9308,'2020-01-03');
 ```
 
-#### 3.5.1 窗口范围控制
+### 3.5.1 窗口范围控制
+
 ![Figure 1. 窗口范围控制，range vs row](https://github.com/Whojohn/learn/blob/master/docs/hive/pic/windows_row_range_difference.png?raw=true)
 
 
@@ -528,7 +579,7 @@ insert into table login_date values("A","2018-09-04"),
 select use from (select use,datediff(login,lag(login,2) over(partition by use order by login asc)) as la from (select use,login from login_date group by use,login) as t ) as lag where la=2;
 ```
 
-### 4. 行列转换
+## 4. 行列转换
 
 > reference:
 >
@@ -589,12 +640,3 @@ LATERAL VIEW explode(ename) myTable1 AS ename;
 +---------+------------+
 
 ```
-
-
-
-
-
-
-
-
-
