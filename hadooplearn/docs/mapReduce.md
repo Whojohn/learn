@@ -16,7 +16,7 @@
 
 - 核心知识点
 
-    1. **官方文档明确的说明了`map`，`reduce`阶段都是有排序。**不同的是`reduce`一般只需要一次归并排序即可，`reduce`的处理必须经过这次处理才能开始。`map`阶段是先处理，然后执行多次归并排序，最终输出`map`处理文件。
+  1. **官方文档明确的说明了`map`，`reduce`阶段都是有排序。**不同的是`reduce`一般只需要一次归并排序即可，`reduce`的处理必须经过这次处理才能开始。`map`阶段是先处理，然后执行多次归并排序，最终输出`map`处理文件。
 
 2. 数据在`mapreduce`中都是以<key,value>的方式进行流动，目的是保证内部有序。
 3. 如下图所示，`mapreduce`分为以下几个阶段：`map`，`sort`，`shuffle`，`merge`，`reduce`。
@@ -29,9 +29,11 @@
 
 ## 1. Map 阶段
 
-> map 阶段包括了:`map`，`store`操作。
+> 1. map 阶段包括了:`map`，`store`操作。
+>
+> 2. 注意单个`map`中只有一个`buffer环`，但是可以有多个`split`，`buffer`中通过`元信息`中的`partition号`进行分区划分。
 
-### 1.1 map 执行流程
+### 1.1 map 执行流程(maptask 类)
 
 1. map逻辑执行：inputsplit（注意区分splitable）等处理读取的数据位置，按照`mapper`逻辑进行处理，输出到Partitioner。
 2. partition 阶段：mapper 函数处理后，通过`Partitioner`根据`hash(map key)%reduce number`写入到对应的`buffer 环中`，`buffer 环`个数与`reduce`个数一致（buffer 大小由`mapreduce.task.io.sort.mb`控制）。
@@ -42,7 +44,11 @@
 
 - buffer 环
 
-> 首尾指针标识的一个缓存环，当需要溢写的时候，通过标识溢写的范围，锁定该部分内存的写入，不干扰剩余内存的使用。
+> 1. 首尾指针标识的一个缓存环，当需要溢写的时候，通过标识溢写的范围，锁定该部分内存的写入，不干扰剩余内存的使用。
+> 2. 单个`map`中只有一个`buffer`环，但是可以有多个`spill`文件。
+> 3. buffer 环中数据结构如下(kvmeta|kv)：
+>
+> index|partition|keystarat|valuestart|vallen ||| kv
 
 - inputsplit
 
@@ -118,7 +124,7 @@ mapreduce.map.output.compress
 
 > Reduce 阶段第一步是通过 `shuffle（copy；两个名词的含义一致，官方说法）`执行合并文件，只有合并完成后。才执行`reduce`逻辑处理。
 
-### 2.1 reduce 执行流程
+### 2.1 reduce 执行流程（reducetask 类）
 
 1. Copy阶段：启动独立的`jvm`,从`map`中按照不同的分区路由复制到节点中，复制过程会类似的先放入内存，后写入到磁盘上，内存通过`mapreduce.reduce.shuffle.input.buffer.percent`(reduce总内存比率)控制。
 2. Merge阶段: 将输入排序，并行执行边输入，边排序，最终形成一个唯一的文件。
@@ -153,4 +159,3 @@ mapreduce.reduce.shuffle.parallelcopies
 > jvm 复用缺点是会在任务结束前，锁定资源。比如`map`阶段需要10个容器，现在只省下`4个`容器正在运行，剩余`6个`容器的资源不会释放。
 
 2. 多个`map reduce`嵌套，需要启动多轮次`map reduce`。如：hive 会把执行分成多个`stage`，每个`stage`是独立的`mapreduce`任务。
-
