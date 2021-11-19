@@ -143,7 +143,7 @@ FROM emp  FULL OUTER JOIN  dept
 > reference:
 > https://en.wikipedia.org/wiki/Sort-merge_join
 >
-> https://www.jianshu.com/p/97e76dddcbfb
+> https://www.cnblogs.com/163yun/p/9121530.html
 
 ```总结：
 1. hive 内部一般会分析大表和小表，默认开启不同的`join`类型进行优化。

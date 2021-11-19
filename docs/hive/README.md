@@ -2,6 +2,9 @@
 
 ![数据类型](https://github.com/Whojohn/learn/blob/master/docs/hive/pic/hive知识结构.svg?raw=true)
 
+前置知识(数仓概念)
+- [前置知识(数仓概念)](https://github.com/Whojohn/learn/blob/master/docs/hive/数据仓库.md)
+
 
 - [Hive-1-基础概念](https://github.com/Whojohn/learn/blob/master/docs/hive/Hive-1-基础概念.md)
 
