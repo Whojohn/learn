@@ -1,5 +1,6 @@
 # Flink 回忆录
 
+## 基础回顾
 -  [Flink-1-概念&常用术语](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap1.md)
 
 -  [Flink-2-架构](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap2.md)
@@ -21,3 +22,7 @@
 -  [Flink-10-容错&checkpoint](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap10.md)
 
 -  [Flink-11-内存配置相关](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Cap11.md)
+
+## 源码分析
+
+-  [Flink sql client流程](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink%20sql%20client%20%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90.md)
