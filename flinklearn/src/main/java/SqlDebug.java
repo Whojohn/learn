@@ -14,8 +14,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * flink sql debug 实现demo
+ * 需要配置：
+ * 1. 环境变量： FLINK_CONF_DIR=C:\workbench\flink\flink-table\flink-sql-client\src\main\resources
+ * 2. 连接器依赖： dependenceJarsPath 指定 jar 存放路径
  */
 public class SqlDebug {
+    static String dependenceJarsPath = "file:/C:/Users/john/Desktop/jar/";
 
     /**
      * 批获取数据方式
@@ -95,7 +99,7 @@ public class SqlDebug {
 
         // 配置依赖所在路径
         List<URL> jars = new ArrayList<URL>() {{
-            add(new URL("file:/C:/Users/john/Desktop/jar/"));
+            add(new URL(dependenceJarsPath));
         }};
 
         // 新建 LocalExecutor
