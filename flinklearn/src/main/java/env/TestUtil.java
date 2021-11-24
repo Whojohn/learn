@@ -4,8 +4,6 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.RestOptions;
-import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
-import org.apache.flink.runtime.state.storage.FileSystemCheckpointStorage;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;
 
@@ -27,6 +25,8 @@ public class TestUtil {
 //        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(parall, conf);
 
         env.enableCheckpointing(30000);
+        env.setParallelism(parall);
+
         // 新版api 标识了 memory 状态量会被移除的信息，改用以下方式进行调用
 //        env.setStateBackend(new HashMapStateBackend());
 //        env.getCheckpointConfig().setCheckpointStorage(new FileSystemCheckpointStorage("hdfs://test:9000/flink/test"));

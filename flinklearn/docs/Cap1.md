@@ -109,7 +109,7 @@ reference: https://blog.csdn.net/baichoufei90/article/details/108274922
 
 - task 
 
-**线程组，多个相同算子、算子链接运行所在的线程组，由同类 subtask 组成**。
+**线程组，多个相同并行度算子、算子链接运行所在的线程组，由同类 subtask 组成。__**。
 
 - subtask
 
@@ -121,7 +121,7 @@ reference: https://blog.csdn.net/baichoufei90/article/details/108274922
 
 - Flink job
 
-单个flink 任务
+单个`flink` 任务,由多个`task`构成.
 
 - Flink appliation
 

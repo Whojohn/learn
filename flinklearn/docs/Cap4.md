@@ -2,7 +2,7 @@
 
 > reference:
 > https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/datastream/fault-tolerance/state/
-> http://wuchong.me/blog/2016/04/29/flink-internals-memory-manage/ (MemoryManager 内存相关)
+> http://wuchong.me/blog/2016/04/29/flink-internals-memory-manage/ (MemoryManager 内存相关) 
 
 
 `Flink` 针对不同的数据类型采取不同序列化策略，以节省内存、网络的开销。`Flink`序列化应用于网络数据交换和内存管理中，其中**内存管理是如今只应用在`Batch`模式**下的`MemoryManager`中用于处理`sort`，`join`，`shuffle`等操作。数据类型的声明必须在`execute()`, `print()`, `count()`, or `collect()` 方法调用前确定。
@@ -151,7 +151,8 @@ TypeInformation.createSerializer()
 env.getConfig().registerTypeWithKryoSerializer(MyCustomType.class, MyCustomSerializer.class)
 ```
 
-
+## 3 数据类型对比(TypeComparator)
+> 该功能现今只对批作业有效，流作业只会用到 `TypeInformation`，`TypeSerializer`。`TypeComparator` 用于批量执行时，直接在堆外内存进行对比等操作。
 
 
 

@@ -50,7 +50,8 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
     public void onTimer(long timestamp, OnTimerContext ctx, Collector<Tuple2<Long, Long>> out) throws Exception {
         super.onTimer(timestamp, ctx, out);
         cou += 1;
-        System.out.println("fire timer: " + timestamp + "  " + cou);
+        // 显示 timer 可以同时被 processtime 和 eventtime 触发
+        System.out.println("fire  " + ctx.timeDomain() + " timer: " + timestamp + "  " + cou);
     }
 
     /**
@@ -64,7 +65,9 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
     @Override
     public void processElement(Tuple2<Long, Long> value, Context ctx, Collector<Tuple2<Long, Long>> out) throws Exception {
         // 触发timer 执行。注意没有timestamp的时候会返回空
-        if (ctx.timestamp() != null) ctx.timerService().registerProcessingTimeTimer(ctx.timestamp() + 300);
+        // 同时触发 processtime 和 eventtime 两种时间事件
+        if (ctx.timestamp() != null) ctx.timerService().registerEventTimeTimer(ctx.timestamp() + 2000);
+        ctx.timerService().registerProcessingTimeTimer(ctx.timerService().currentProcessingTime() + 2000);
         // 处理逻辑
         System.out.println("source in state is:" + sum.value());
         Tuple2<Long, Long> temp = sum.value();
@@ -111,6 +114,12 @@ public class TestProcessFunction extends ProcessFunction<Tuple2<Long, Long>, Tup
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = TestUtil.iniEnv(1);
         env.addSource(new TestSource("TestProcessFunction", buildSource()))
+                .assignTimestampsAndWatermarks(
+                        org.apache.flink.api.common.eventtime.WatermarkStrategy
+                                .<Row>forGenerator(org.apache.flink.api.common.eventtime.WatermarkStrategy.forBoundedOutOfOrderness(java.time.Duration.ofSeconds(0)))
+                                .withTimestampAssigner((event, pre) -> (long) event.getField(0))
+                                .withIdleness(java.time.Duration.ofSeconds(5))
+                )
                 .map(e -> {
                     Tuple2<Long, Long> temp = new Tuple2<Long, Long>();
                     temp.f0 = (Long) e.getField(0);

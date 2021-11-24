@@ -2,7 +2,8 @@
 
 reference:
 
-https://nightlies.apache.org/flink/flink-docs-master/zh/docs/concepts/flink-architecture/#taskmanagers
+> https://nightlies.apache.org/flink/flink-docs-master/zh/docs/concepts/flink-architecture/#taskmanagers
+> https://flink-learning.org.cn/article/detail/48f798b2581f0a483b05b7b8d3f4cb23
 
 
 
@@ -52,14 +53,14 @@ reference:
 
 - operator chain:
 
-     只能把能够串联的算子并且算子间数据交换方式为:`forward`的算子进行串联。不能串联或者数据交换方式是：reblance(reblance 是web ui 逻辑执行图显示，调用函数为shuffle，或者是Rescaling )，broadcast，用户自定义，则无法串联。会引发新的task，新的task 需要新的线程进行支持。
+     只能把能够串联的算子并且算子间数据交换方式为:`forward`的算子进行串联。不能串联或者数据交换方式是：reblance(包括类似的rescala,shuffle等)，broadcast，用户自定义，则无法串联。会引发新的task，新的task 需要新的线程进行支持。
 
 - slot 共享：
 
       如图2所示，同一job内`task`共享一个slot，即使`task`之间是无法算子链接，这意味着一个slot内线程数与并发度和`sub-task`个数（task线程数）有关。
 
 
-- JobGraph图(只考虑job chain 不考虑 slot share)
+- JobGraph图(只考虑 operator chain 不考虑 slot share)
 
 ![ExecutionGraph](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap2-tasks_chains.svg?raw=true)
 
