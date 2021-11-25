@@ -15,6 +15,7 @@
 1. job -> task(线程组) -> subtask（独立线程；工作线程）;
 2. operator
 3. operator chain
+4. mailbox 机制
 
 ## 1. SubTask 是如何实现(Flink 工作线程的实现)
 
@@ -86,21 +87,101 @@ run:834, Thread (java.lang)
 
 ## 4. flink 什么操作会有并发安全问题？
 
-> - mailbox 解决的并发安全问题
+> - mailbox 解决的并发安全问题（下文主要讨论这个处理过程）
 >
-> `event`处理，`watermark`处理，`checkpoint 对齐`，`checkpoint 定期触发`，`SystemProcessingTimeService 定时任务(process time会启动额外线程定期生成系统时间)`等等。
+> 1. 事件处理：包括 events, watermarks, barriers, latency markers 的处理和发送
+>
+> 2. checkpoint 触发：通过 RPC 调用触发 checkpoint（在 Source 中）、通知 checkpoint 的完成情况，（注：对下游来说，checkpoint 触发和取消是通过 barrier 触发的，归为第一种情况）
+>
+> 3. Processing Time Timers: 处理时间定时器是通过 `ScheduledExecutor` 异步执行的（事件事件定时器触发是通过 watermark 触发的，归为第一种情况）
 >
 > - 非 mailbox 并发安全
 >
 > `state ttl`，使用`rockdb`可见性为`过期也可见`，同时配了`ttl`，可能读取和删除并发发生(ttl后台运行删除逻辑)。
 
-## 5. Event / Process Time 与线程的关系
+## 5. Event / Process Timer 实现底层与 StreamTask 运行流程
 
-- 结论
+## 5.1 ProcessTime Timer 底层原理
 
-1. `event time`有`mailbox`机制，**但是时间处理是通过`StreamTask逻辑`实现，不需要进行投递**。不需要使用额外线程触发和处理 `event time`。完整堆栈如下：
+​      `process time`有 `mailbox`机制，时间的处理通过`mailbox`，投递请求，调用`StreamTask`实现。`mail`的投递是`SystemProcessingTimeService `开启定时线程实现的。
 
 ```
+定时线程        										工作线程
+														|1. 用户 jar       : ctx.timerService().registerProcessingTimeTimer 
+														|2. streaming.api  : SimpleTimerService.registerProcessingTimeTimer
+														|3. streaming.api  : InternalTimerServiceImpl.registerProcessingTimeTimer
+				<------------------------------------- 				                |4. runtime.tasks  : ProcessingTimeService.registerTimer // 发起一个定时线程
+				|										|
+				|										|  StreamTask processinput 处理每一条数据
+				|										|
+定时线程发起 mailbox 投递----------------------------->	| 放入到 mailbox 队列中
+														|
+														| mailbox 每一轮次检测，检测到 mailbox 
+														| 队列不为空，停止逻辑处理，处理 mail 事件
+														| 调用该 Timer 对应的ontime 函数，执行操作；
+														| 完成 mailbox 中所有 mail 事件处理
+														|
+														| StreamTask processinput 处理每一条数据
+```
+
+
+
+```
+# processtime ontimer 处理堆栈
+onTimer:54, TestProcessFunction
+invokeUserFunction:96, LegacyKeyedProcessOperator (org.apache.flink.streaming.api.operators)
+onProcessingTime:81, LegacyKeyedProcessOperator (org.apache.flink.streaming.api.operators)
+onProcessingTime:284, InternalTimerServiceImpl (org.apache.flink.streaming.api.operators)
+onProcessingTime:-1, 1809112443 (org.apache.flink.streaming.api.operators.InternalTimerServiceImpl$$Lambda$879)
+invokeProcessingTimeCallback:1324, StreamTask (org.apache.flink.streaming.runtime.tasks)
+lambda$null$17:1315, StreamTask (org.apache.flink.streaming.runtime.tasks)
+run:-1, 396345110 (org.apache.flink.streaming.runtime.tasks.StreamTask$$Lambda$882)
+runThrowing:50, StreamTaskActionExecutor$1 (org.apache.flink.streaming.runtime.tasks)
+run:90, Mail (org.apache.flink.streaming.runtime.tasks.mailbox)
+processMail:317, MailboxProcessor (org.apache.flink.streaming.runtime.tasks.mailbox)
+runMailboxLoop:189, MailboxProcessor (org.apache.flink.streaming.runtime.tasks.mailbox)
+
+# 处理 mailbox 时候处理 process time 逻辑 ，说明 process time 需要外部投递 mail 事件
+runMailboxLoop:619, StreamTask (org.apache.flink.streaming.runtime.tasks)
+invoke:583, StreamTask (org.apache.flink.streaming.runtime.tasks)
+doRun:758, Task (org.apache.flink.runtime.taskmanager)
+run:573, Task (org.apache.flink.runtime.taskmanager)
+run:834, Thread (java.lang)
+```
+
+## 5.2 EventTime Timer 原理
+
+`event time`有`mailbox`机制，**但是时间处理是通过`StreamTask逻辑`实现，不需要进行投递**。不需要使用额外线程触发和处理 `event time`。
+
+```
+定时触发生成watermark			|工作线程的上游线程(数据发送给下游)							    工作线程
+|								|																|1. 用户 jar       : ctx.timerService().registerEventTimeTimer 
+|								|																|2. streaming.api  : SimpleTimerService.registerEventTimeTimer
+ ------------------->			|            													|3. streaming.api.operators  : InternalTimerServiceImpl.registerEventTimeTimer 
+|								StreamTask processinput 处理每一条数据							   // 把事件插入到队列中
+|								StreamTask processinput 处理每一条数据							|
+|								收到mailbox	，生成 WaterMark 以放入到数据流，发送给下游			|
+|								|																|  StreamTask processinput 处理每一条数据
+|								|																|  StreamTask processinput 处理每一条数据
+|								|																|  StreamTask processinput 处理每一条数据
+|								|																	// 数据流中传入了watermark 事件，触发WaterMark处理
+|								|																						|
+|								|																						|
+|								|																						-> | WaterMark 触发处理
+|								|																						| 判定触发的 WaterMark 跟队列中需要触发的 Eventtime 时间
+|								|																						| 取出时间小于 等于 WaterMark 的事件，处理事件（不需要mailbox 投递）
+|								|																|						   
+|								|																|	 StreamTask processinput 处理每一条数据					   
+|								|																|    StreamTask processinput 处理每一条数据
+|								|																|    StreamTask processinput 处理每一条数据
+|								|																|
+|								|																|
+|								|																|
+```
+
+```
+# eventtime ontimer 处理堆栈
+
 onTimer:54, TestProcessFunction
 invokeUserFunction:96, LegacyKeyedProcessOperator (org.apache.flink.streaming.api.operators)
 onEventTime:75, LegacyKeyedProcessOperator (org.apache.flink.streaming.api.operators)
@@ -124,38 +205,6 @@ doRun:758, Task (org.apache.flink.runtime.taskmanager)
 run:573, Task (org.apache.flink.runtime.taskmanager)
 run:834, Thread (java.lang)
 ```
-
-2. `process time`有 `mailbox`机制，时间的处理通过`mailbox`，投递请求，调用`StreamTask`实现。`mail`的投递是`SystemProcessingTimeService `开启定时线程实现的。
-
-```
-onTimer:54, TestProcessFunction
-invokeUserFunction:96, LegacyKeyedProcessOperator (org.apache.flink.streaming.api.operators)
-onProcessingTime:81, LegacyKeyedProcessOperator (org.apache.flink.streaming.api.operators)
-onProcessingTime:284, InternalTimerServiceImpl (org.apache.flink.streaming.api.operators)
-onProcessingTime:-1, 1809112443 (org.apache.flink.streaming.api.operators.InternalTimerServiceImpl$$Lambda$879)
-invokeProcessingTimeCallback:1324, StreamTask (org.apache.flink.streaming.runtime.tasks)
-lambda$null$17:1315, StreamTask (org.apache.flink.streaming.runtime.tasks)
-run:-1, 396345110 (org.apache.flink.streaming.runtime.tasks.StreamTask$$Lambda$882)
-runThrowing:50, StreamTaskActionExecutor$1 (org.apache.flink.streaming.runtime.tasks)
-run:90, Mail (org.apache.flink.streaming.runtime.tasks.mailbox)
-processMail:317, MailboxProcessor (org.apache.flink.streaming.runtime.tasks.mailbox)
-runMailboxLoop:189, MailboxProcessor (org.apache.flink.streaming.runtime.tasks.mailbox)
-
-# 处理 mailbox 时候处理 process time 逻辑 ，说明 process time 需要外部投递 mail 事件
-runMailboxLoop:619, StreamTask (org.apache.flink.streaming.runtime.tasks)
-invoke:583, StreamTask (org.apache.flink.streaming.runtime.tasks)
-doRun:758, Task (org.apache.flink.runtime.taskmanager)
-run:573, Task (org.apache.flink.runtime.taskmanager)
-run:834, Thread (java.lang)
-```
-
-
-
-
-
-
-
-
 
 
 
