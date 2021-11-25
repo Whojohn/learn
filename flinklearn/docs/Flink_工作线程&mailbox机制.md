@@ -106,7 +106,7 @@ run:834, Thread (java.lang)
 ​      `process time`有 `mailbox`机制，时间的处理通过`mailbox`，投递请求，调用`StreamTask`实现。`mail`的投递是`SystemProcessingTimeService `开启定时线程实现的。
 
 ```
-定时线程        										工作线程
+定时线程        										                     工作线程
 														|1. 用户 jar       : ctx.timerService().registerProcessingTimeTimer 
 														|2. streaming.api  : SimpleTimerService.registerProcessingTimeTimer
 														|3. streaming.api  : InternalTimerServiceImpl.registerProcessingTimeTimer
@@ -154,29 +154,29 @@ run:834, Thread (java.lang)
 `event time`有`mailbox`机制，**但是时间处理是通过`StreamTask逻辑`实现，不需要进行投递**。不需要使用额外线程触发和处理 `event time`。
 
 ```
-定时触发生成watermark			|工作线程的上游线程(数据发送给下游)							    工作线程
-|								|																|1. 用户 jar       : ctx.timerService().registerEventTimeTimer 
-|								|																|2. streaming.api  : SimpleTimerService.registerEventTimeTimer
- ------------------->			|            													|3. streaming.api.operators  : InternalTimerServiceImpl.registerEventTimeTimer 
-|								StreamTask processinput 处理每一条数据							   // 把事件插入到队列中
-|								StreamTask processinput 处理每一条数据							|
-|								收到mailbox	，生成 WaterMark 以放入到数据流，发送给下游			|
-|								|																|  StreamTask processinput 处理每一条数据
-|								|																|  StreamTask processinput 处理每一条数据
-|								|																|  StreamTask processinput 处理每一条数据
-|								|																	// 数据流中传入了watermark 事件，触发WaterMark处理
-|								|																						|
-|								|																						|
-|								|																						-> | WaterMark 触发处理
-|								|																						| 判定触发的 WaterMark 跟队列中需要触发的 Eventtime 时间
-|								|																						| 取出时间小于 等于 WaterMark 的事件，处理事件（不需要mailbox 投递）
-|								|																|						   
-|								|																|	 StreamTask processinput 处理每一条数据					   
-|								|																|    StreamTask processinput 处理每一条数据
-|								|																|    StreamTask processinput 处理每一条数据
-|								|																|
-|								|																|
-|								|																|
+定时触发生成watermark       |工作线程的上游线程(数据发送给下游)                                                            工作线程
+|                           |                                                                 |1. 用户 jar       : ctx.timerService().registerEventTimeTimer 
+|                           |                                                                 |2. streaming.api  : SimpleTimerService.registerEventTimeTimer
+| 生成watermark mail发送->  |                                                                 |3. streaming.api.operators  : InternalTimerServiceImpl.registerEventTimeTimer // 把事件插入到队列中
+|                           |StreamTask processinput 处理每一条数据                           |   
+|                           |StreamTask processinput 处理每一条数据                           |
+|                           |收到mailbox，生成 WaterMark 以放入到数据流，发送给下游           |
+|                           |                                                                 |  StreamTask processinput 处理每一条数据
+|                           |                                                                 |  StreamTask processinput 处理每一条数据
+|                           |                                                                 |  StreamTask processinput 处理每一条数据
+|                           |                                                                         // 数据流中传入了watermark 事件，触发WaterMark处理
+|                           |                                                                                                                 |
+|                           |                                                                                                                 |
+|                           |                                                                                                                 -> | WaterMark 触发处理
+|                           |                                                                                                                 | 判定触发的 WaterMark 跟队列中需要触发的 Eventtime 时间
+|                           |                                                                                                                 | 取出时间小于 等于 WaterMark 的事件，处理事件（不需要mailbox 投递）
+|                           |                                                                 |                                                   
+|                           |                                                                 |         StreamTask processinput 处理每一条数据                                           
+|                           |                                                                 |    StreamTask processinput 处理每一条数据
+|                           |                                                                 |    StreamTask processinput 处理每一条数据
+|                           |                                                                 |
+|                           |                                                                 |
+|                           |                                                                 |
 ```
 
 ```
