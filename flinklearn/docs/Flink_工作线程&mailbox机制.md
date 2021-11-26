@@ -110,14 +110,14 @@ run:834, Thread (java.lang)
 														|1. 用户 jar       : ctx.timerService().registerProcessingTimeTimer 
 														|2. streaming.api  : SimpleTimerService.registerProcessingTimeTimer
 														|3. streaming.api  : InternalTimerServiceImpl.registerProcessingTimeTimer
-				<------------------------------------- 				                |4. runtime.tasks  : ProcessingTimeService.registerTimer // 发起一个定时线程
+				<------------------------------------- 				                |4. runtime.tasks  : ProcessingTimeService.registerTimer // 操作插入到队列，缓存onTimer 操作，然后发起一个定时线程
 				|										|
 				|										|  StreamTask processinput 处理每一条数据
 				|										|
 定时线程发起 mailbox 投递----------------------------->	| 放入到 mailbox 队列中
 														|
 														| mailbox 每一轮次检测，检测到 mailbox 
-														| 队列不为空，停止逻辑处理，处理 mail 事件
+														| 队列不为空，停止逻辑处理，处理 mail 事件。从ProcessTime 队列中取出操作
 														| 调用该 Timer 对应的ontime 函数，执行操作；
 														| 完成 mailbox 中所有 mail 事件处理
 														|
