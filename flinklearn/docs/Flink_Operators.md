@@ -1,4 +1,4 @@
-# Flink-5-Operators 
+# Flink_Operators
 
 ## 1. DataStream 中的 Operators
 
@@ -7,13 +7,13 @@
       Flink source就是 `DataStream`的源头，   `operator` 操作会把输入的`DataStreams` 转化为一个或多个其他`stream`。其中`DataStream` 子类有： `SingleOutputStreamOperator`，`IterativeStream`， `KeyedStream`，`DataStreamSource` 等。`operator`  通过 `stream` 的函数进行调用。
 
 **源码 Stream路径 ：org.apache.flink.streaming.api.datastream，以下列举常见 stream **
-![stream流源码路径](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap5-stream.png?raw=true)
+![stream流源码路径](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_Operators-stream.png?raw=true)
 
 **stream类**
-![stream分类](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap5-stream(%E6%8A%BD%E8%B1%A1%E6%A6%82%E5%BF%B5%E7%9A%84stream).svg?raw=true)
+![stream分类](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_Operators-stream(%E6%8A%BD%E8%B1%A1%E6%A6%82%E5%BF%B5%E7%9A%84stream).svg?raw=true)
 
 **operator总览**
-![operator总览](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap5-operator.svg?raw=true)
+![operator总览](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_Operators-operator.svg?raw=true)
 
 - DataStream
 

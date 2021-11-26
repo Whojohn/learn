@@ -1,4 +1,4 @@
-# Flink-10-容错&checkpoint
+# Flink_容错&checkpoint
 
 ## 1. 常见问题
 
@@ -53,10 +53,10 @@
 ### 2.1.1 分布式快照Chandy-Lamport 算法
 
 - Checkpoint 的完成(先不考虑图中并行度不一致的情况)
-  ![数据流中的检查点障碍](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Cap10-stream_barriers.svg?raw=true)
+  ![数据流中的检查点障碍](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_容错&checkpoint-stream_barriers.svg?raw=true)
 
 
-![数据流中的检查点Barrier](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Cap10-stream_barriers.svg?raw=true)
+![数据流中的检查点Barrier](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_容错&checkpoint-stream_barriers.svg?raw=true)
 
          如上图所示，`Checkpoint` 整体控制流程由`Jobmanager`触发和最终确认提交。基础步骤如下：
     
@@ -96,7 +96,7 @@
 
 > Flink 为了解决对齐间源相差大的问题，实现了`Unaligned Checkpoint`。
 
-![Unaligned Checkpoint](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap10-unaligned-checkpoint.jpg?raw=true)
+![Unaligned Checkpoint](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_容错&checkpoint-unaligned-checkpoint.jpg?raw=true)
 
 
 - Unaligned-Checkpoint 实现方式

@@ -1,4 +1,4 @@
-# Flink-4-数据类型和序列化
+# Flink_数据类型和序列化
 
 > reference:
 > https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/datastream/fault-tolerance/state/
@@ -9,10 +9,10 @@
 
 
 - Flink 序列化调用图
-![stream序列化调用图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-howSerialWorkInFlinkMethod.png?raw=true)
+![stream序列化调用图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_数据类型和序列化-howSerialWorkInFlinkMethod.png?raw=true)
 
 - Flink batch模式下数据类型与内存管理关系图
-![Flink batch模式下数据类型与内存管理关系图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap4-typeWorkWithSerialInMemory.png?raw=true)
+![Flink batch模式下数据类型与内存管理关系图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_数据类型和序列化-typeWorkWithSerialInMemory.png?raw=true)
 
 
 ## 1.1 Flink 数据类型

@@ -1,4 +1,4 @@
-# Flink-11-内存配置相关
+# Flink_内存模型与配置
 
 > 不同版本的flink 配置有所不一样，`1.10 `是内存模型版本的分界线。
 
@@ -47,7 +47,7 @@
               └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
 ```
 
-  ![数据流中的检查点障碍](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap11-memory-arch.png?raw=true)
+  ![数据流中的检查点障碍](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_内存模型与配置-memory-arch.png?raw=true)
 
 
 ## 1. Heap 内存

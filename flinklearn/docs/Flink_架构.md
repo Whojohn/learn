@@ -1,4 +1,4 @@
-# Flink-2-架构
+# Flink-架构
 
 reference:
 
@@ -12,7 +12,7 @@ reference:
 > Flink 组件主要分为：Client , Jobmanager , TaskManager 。
 
 
-![The processes involved in executing a Flink dataflow](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap2-flink-architecture.svg?raw=true)
+![The processes involved in executing a Flink dataflow](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_架构-flink-architecture.svg?raw=true)
 
 
 #### 1.1.1 Cient
@@ -62,14 +62,14 @@ reference:
 
 - JobGraph图(只考虑 operator chain 不考虑 slot share)
 
-![ExecutionGraph](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap2-tasks_chains.svg?raw=true)
+![ExecutionGraph](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_架构-tasks_chains.svg?raw=true)
 
  
 - ExecutionGraph 图
 - 没有slot 共享的物理执行图
-![TaskManagers without shared Task Slots](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap2-tasks_slots.svg?raw=true)
+![TaskManagers without shared Task Slots](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_架构-tasks_slots.svg?raw=true)
 
 
 - slot 共享物理执行图
-![TaskManagers with shared Task Slots](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/cap2-slot_sharing.svg?raw=true)
+![TaskManagers with shared Task Slots](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_架构-slot_sharing.svg?raw=true)
 
