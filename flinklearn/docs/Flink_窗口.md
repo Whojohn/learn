@@ -1,11 +1,16 @@
 # Flink_窗口
 
-> - 注意
->
->   **时间戳在flink 内部以 ms 为单位，unix timestamp 作为基础单位。因此，使用时候要注意时区的影响。比如使用 Tumbling 窗口，中国时间必须处理才能使数据开窗规则为中国自然日。**
->  窗口计算范围为: start<=time<end ，不包括上界
+> reference:
+> https://www.jianshu.com/p/586db7a56a0a
+> https://www.cnblogs.com/rossiXYZ/p/12345969.html
 
-      窗口将流拆分为有限的桶。窗口内的数据会按照用户逻辑计算，stream 定期生成窗口这样就能达到：每5分钟统计一次pv uv 等维度统计。
+ - 注意
+
+1. **时间戳在flink 内部以 ms 为单位，unix timestamp 作为基础单位。因此，使用时候要注意时区的影响。比如使用 Tumbling 窗口，中国时间必须处理才能使数据开窗规则为中国自然日。**
+
+2. 窗口计算范围为: start<=time<end ，不包括上界.
+
+   窗口将流拆分为有限的桶。窗口内的数据会按照用户逻辑计算，stream 定期生成窗口这样就能达到：每5分钟统计一次pv uv 等维度统计。
 
 ## 1.1 窗口语法
 
@@ -404,16 +409,16 @@ TestProcessFunction output:2021-11-24 12:00:32.000,job1
 
 ### 4.1 触发器（Trigger）
 
-​       **Trigger本质是一个特殊的timer**。触发器（Trigger）控制了窗口的结束，任何一个 `WindowAssigner` 都会定义一个默认的 `Trigger`，如：使用`TumblingEventTimeWindows`，默认会使用`EventTimeTrigger`。`Trigger`可以按照一定规律触发行为，实现在watermark 没有到达前输出部分数据。 自定义 `Trigger` 由两部分构成：触发`Trigger`的事件&`Trigger`触发后的行为。
+       **Trigger本质是一个特殊的timer**。触发器（Trigger）控制了窗口的结束，任何一个 `WindowAssigner` 都会定义一个默认的 `Trigger`，如：使用`TumblingEventTimeWindows`，默认会使用`EventTimeTrigger`。`Trigger`可以按照一定规律触发行为，实现在watermark 没有到达前输出部分数据。 自定义 `Trigger` 由两部分构成：触发`Trigger`的事件&`Trigger`触发后的行为。
 
 - 触发调用 `Trigger` 的事件（Trigger 接口中包含的函数）
 
 > 注意前三种必须返回 `TriggerResult` 对象，通过`TriggerResult`控制窗口行为 。后两种没有任何返回。
 
-1. onElement : 每一条数据，触发。
-2. onEventTime：当定义使用`event time `的`Timer fire `时候，触发。
+1. onElement : 每一条数据执行的操作(触发行为类型)。
+2. onEventTime：当定义使用`event time `的`Timer fire `时候执行的操作(触发行为类型)。
 
-3. onProcessingTime：当定义使用`process time`的`Timer fire` 时候，触发。
+3. onProcessingTime：当定义使用`process time`的`Timer fire` 执行的操作(触发行为类型)。
 
 4. onMerge： 两个窗口被合并时候触发。如： session window。
 5. clear：窗口被清除时触发。
@@ -435,8 +440,8 @@ TestProcessFunction output:2021-11-24 12:00:32.000,job1
 3. CountTrigger ：在Windows 中的数据达到一定量时触发。
 4. DeltaTrigger：计算上次触发的数据点与当前到达的数据点之间的增量。如果 delta 高于指定的阈值，它就会触发。
 5. NeverTrigger：永远不会触发的触发器，作为 GlobalWindows 的默认触发器。
-6. ContinuousEventTimeTrigger：一定时间间隔内多次触发窗口，**注意必须 watermark 流动才能触发窗口**。
-7. ContinuousProcessingTimeTrigger：一定时间间隔内多次触发窗口。
+6. ContinuousEventTimeTrigger：一定时间间隔内多次触发窗口，用于提前输出数据，**注意必须 watermark 流动才能触发窗口**。
+7. ContinuousProcessingTimeTrigger：一定时间间隔内多次触发窗口，用于提前输出数据。
 
 ### 4.1.1 EventTimeTrigger源码
 
@@ -532,7 +537,7 @@ for (Iterator<TimestampedValue<Object>> iterator = elements.iterator();
 
 ## 5. Window 工作原理 & 源码分析
 
-​    window 的工作逻辑`WindowOperator`有详细描述，主要涉及到以下几个类：`WindowAssigner`（数据分配到对应的窗口 pane 中），`Trigger`，`Evictor`。注意：窗口的触发底层还是基于`EventTime/ProcessTime Timer`实现，具体`Timer`作用省略。
+    window 的工作逻辑`WindowOperator`有详细描述，主要涉及到以下几个类：`WindowAssigner`（数据分配到对应的窗口 pane 中），`Trigger`，`Evictor`。注意：窗口的触发底层还是基于`EventTime/ProcessTime Timer`实现，具体`Timer`作用省略。
 
 ### 5.1 WindowOperator 处理流程
 
@@ -601,6 +606,4 @@ public class TimeWindow extends Window {
 }
 
 ```
-
-
 
