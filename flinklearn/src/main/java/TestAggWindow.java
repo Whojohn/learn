@@ -6,9 +6,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import org.apache.flink.table.expressions.In;
 import org.apache.flink.types.Row;
-import scala.Int;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -17,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TestWindow {
+public class TestAggWindow {
     public static List<Row> buildSource() {
         List<String> dat = Arrays.asList("2021-11-24 12:00:00.000",
                 "2021-11-24 12:00:01.000",
@@ -47,6 +45,10 @@ public class TestWindow {
         return source;
     }
 
+    /**
+     * 5秒的watermark 延迟， 5秒一个滚动的 tumble window，以 action 字段进行 group by , count(*) 操作
+     *
+     */
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = TestUtil.iniEnv(1);
         env.addSource(new TestSource("TestProcessFunction", buildSource()))
@@ -63,26 +65,26 @@ public class TestWindow {
                         })
                 ).keyBy(e -> e.getField(1))
                 .window(TumblingEventTimeWindows.of(Time.seconds(5)))
-                .aggregate(new AggregateFunction<Row, Tuple2<String,Integer>, Tuple2<String, Integer>>() {
+                .aggregate(new AggregateFunction<Row, Tuple2<String, Integer>, Tuple2<String, Integer>>() {
 
                     @Override
-                    public Tuple2<String,Integer> createAccumulator() {
-                        return new Tuple2("",new Integer(0));
+                    public Tuple2<String, Integer> createAccumulator() {
+                        return Tuple2.of("", Integer.parseInt("0"));
                     }
 
                     @Override
-                    public Tuple2<String,Integer> add(Row value, Tuple2<String,Integer> accumulator) {
-                        return Tuple2.of((String) value.getField(1), (Integer) accumulator.getField(1)+1);
+                    public Tuple2<String, Integer> add(Row value, Tuple2<String, Integer> accumulator) {
+                        return Tuple2.of((String) value.getField(1), (Integer) accumulator.getField(1) + 1);
                     }
 
                     @Override
-                    public Tuple2 getResult(Tuple2<String,Integer> accumulator) {
+                    public Tuple2<String, Integer> getResult(Tuple2<String, Integer> accumulator) {
                         return accumulator;
                     }
 
                     @Override
-                    public Tuple2 merge(Tuple2<String,Integer> a, Tuple2<String,Integer> b) {
-                        return Tuple2.of(a.f0, a.f1+b.f1);
+                    public Tuple2<String, Integer> merge(Tuple2<String, Integer> a, Tuple2<String, Integer> b) {
+                        return Tuple2.of(a.f0, a.f1 + b.f1);
                     }
                 })
                 .print();
