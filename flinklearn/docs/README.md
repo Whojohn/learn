@@ -11,17 +11,19 @@
 
 -  [Flink-5-operators](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_Operators.md)
 
--  [Flink-6-时间](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_时间.md)
+-  [Flink-6-Timer详解](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_timer.md)
 
--  [Flink-7-窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_窗口.md)
+-  [Flink-7-时间](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_时间.md)
 
--  [Flink-8-双流join](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_双流join.md)
+-  [Flink-8-窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_窗口.md)
 
--  [Flink-9-state](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_State.md)
+-  [Flink-9-双流join](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_双流join.md)
 
--  [Flink-10-容错&checkpoint](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_容错&checkpoint.md)
+-  [Flink-10-state](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_State.md)
 
--  [Flink-11-内存配置相关](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_内存模型与配置.md)
+-  [Flink-11-容错&checkpoint](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_容错&checkpoint.md)
+
+-  [Flink-12-内存配置相关](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_内存模型与配置.md)
 
 ## 源码分析 & 特殊功能实现
 
