@@ -12,6 +12,9 @@
 
    窗口将流拆分为有限的桶。窗口内的数据会按照用户逻辑计算，stream 定期生成窗口这样就能达到：每5分钟统计一次pv uv 等维度统计。
 
+![flink窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/flink窗口.svg?raw=true)
+
+
 ## 1.1 窗口语法
 
 ```
@@ -52,7 +55,7 @@ stream
 
         以用户定义间隙将数据无重叠的划分。如，窗口大小为5分钟，从 00:00 ~ 00:05 （包括00 不包括 05）、00:05 ~ 00:10、00:10 ~ 00:15 。。。范围对数据进行划分。
 
-![翻滚的窗户](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/tumbling-windows.svg)
+![tumbling-windows](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/tumbling-windows.svg?raw=true)
 
 ```
 DataStream<T> input = ...;
@@ -68,7 +71,7 @@ input
 
 ### 2.1.2 Sliding 滑动窗口
 
-![滑动窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/sliding-windows.svg)
+![sliding-windows](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/sliding-windows.svg?raw=true)
 
 ```
 // sliding processing-time windows offset by -8 hours
@@ -80,7 +83,7 @@ input
 
 ### 2.1.3 Session 会话
 
-![会话窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/session-windows.svg)
+![session-windows](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/session-windows.svg?raw=true)
 
 ```
 DataStream<T> input = ...;
@@ -102,7 +105,7 @@ input
 
 ### 2.1.4 全局窗口
 
-![全局窗口](https://nightlies.apache.org/flink/flink-docs-release-1.14/fig/non-windowed.svg)
+![non-windowed](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/non-windowed.svg?raw=true)
 
 ```
 DataStream<T> input = ...;

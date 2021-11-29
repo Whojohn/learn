@@ -1,4 +1,5 @@
 # Flink 回忆录
+**除特殊说明，所有版本分析，资料基于 Flink 1.12** 
 
 ## 基础回顾
 -  [Flink-1-概念&常用术语](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_概念&常用术语.md)

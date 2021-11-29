@@ -2,8 +2,7 @@
 
 reference:
 
-https://nightlies.apache.org/flink/flink-docs-release-1.13/docs/concepts/time/
-
+https://nightlies.apache.org/flink/flink-docs-release-1.12/concepts/timely-stream-processing.html
 [Flink 源码之时间处理 - 简书 (jianshu.com)](https://www.jianshu.com/p/18f680247ef1)
 https://mjz-cn.github.io/2020/03/02/Flink%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-Watermark%E5%8E%9F%E7%90%86/
 http://www.liaojiayi.com/
@@ -15,7 +14,7 @@ https://mjz-cn.github.io/2020/03/02/Flink%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-Wa
 
 ## 1.1 Flink 时间类型
 
-​        Flink 中有三种时间类型：process time, ingest time, event time，性能从好到差，**只有 event time 才有watermark 这个概念。**
+        Flink 中有三种时间类型：process time, ingest time, event time，性能从好到差，**只有 event time 才有watermark 这个概念。**
 
 - process time
 
@@ -25,11 +24,11 @@ Flink 算子所在机器的时间。
 
 **Flink 1.12 还有这个概念，Flink 1.13 setStreamTimeCharacteristic() 方法被移除，该概念也消失在官网文档中。**
 
-​    Flink 源所在的机器的时间，与 process time 相比，它一般是由 source 机器产生的，一般用于处理过程比较耗时的场景。
+    Flink 源所在的机器的时间，与 process time 相比，它一般是由 source 机器产生的，一般用于处理过程比较耗时的场景。
 
 - event time
 
-​     event 中的事件时间，时间抽取规则必须由用户指定，并且用户也需要额外指定`watermark`机制。
+     event 中的事件时间，时间抽取规则必须由用户指定，并且用户也需要额外指定`watermark`机制。
 
 ### 1.2 Event time & WaterMark
 
@@ -39,11 +38,11 @@ Flink 算子所在机器的时间。
 
 - 什么是 WaterMark 
 
-​    WaterMark 是一个窗口开始&结束的时间标记 ，它是一个特殊时间，意味着逻辑上应该没有比这个时间更晚到来的数据，假如有，则不放入计算中(数据延迟引发的晚来)。
+    WaterMark 是一个窗口开始&结束的时间标记 ，它是一个特殊时间，意味着逻辑上应该没有比这个时间更晚到来的数据，假如有，则不放入计算中(数据延迟引发的晚来)。
 
 - 为什么要引入 WaterMark
 
-​    event 到达是乱序的，窗口的关闭需要一个时间作为标记，这个时间的标记就是 WaterMark ， WaterMark 定义了乱序数据中，窗口的开始&结束时间。
+    event 到达是乱序的，窗口的关闭需要一个时间作为标记，这个时间的标记就是 WaterMark ， WaterMark 定义了乱序数据中，窗口的开始&结束时间。
 
 - 生成 WaterMark 注意事项
 
