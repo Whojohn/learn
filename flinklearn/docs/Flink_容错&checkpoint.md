@@ -43,6 +43,24 @@
 - `Batch`模式有`Checkpoint`吗？或者其他容错机制？
 
   `Batch`模式只有一种容错机制就是整个容器完全重启。
+  
+- checkpoint 使用需要注意？
+> 1. **RocksDb State Backend 默认是全量快照，会导致性能问题。**假如需要使用增量快照，需要额外配置：state.backend.incremental: true;
+> 2. **RocksDb State Backend 全量模式性能比增量模式要好。**小状态，内存足够时候使用全量模式更好。
+> 3. 单个`taskmanager`中`RocksDb`单个任务可用的`manager memory` = (总可用 manager memory/slot 个数)*slot 数。
+
+- 常见的 RocksDb 配置？
+```
+state.backend.rocksdb.thread.num: 4
+state.backend.rocksdb.predefined-options: SPINNING_DISK_OPTIMIZED
+state.backend.rocksdb.writebuffer.count : 4
+state.backend.rocksdb.writebuffer.number-to-merge : 2
+state.backend.rocksdb.block.blocksize: 256KB
+state.backend.rocksdb.compaction.level.use-dynamic-size: true
+state.backend.incremental: true
+state.backend.rocksdb.block.cache-size: 32MB
+```
+  
 
 ## 2. Checkpoint 原理
 
