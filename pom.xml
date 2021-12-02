@@ -12,6 +12,7 @@
         <module>hadooplearn</module>
         <module>algorithm</module>
         <module>flinklearn</module>
+        <module>kafkalearn</module>
     </modules>
     <properties>
         <java.version>1.8</java.version>
