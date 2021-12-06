@@ -3,28 +3,53 @@
 > reference:
 > <<深入理解Kafka：核心涉及与实践原理>>
 >
+> <<kafka 核心技术与实战>>
+>
 > https://kafka.apache.org/26/javadoc/org/apache/kafka/clients/producer/KafkaProducer.html
+>
+> https://kafka.apache.org/26/javadoc/org/apache/kafka/clients/producer/ProducerInterceptor.html
 
-## 生产者模型
+**注意，一般情况下broker 处理的是由多条数据组合成的数据集(虽然一条数据对应offset加一)。**
 
-![生产者客户端整理架构](https://img.luozhiyun.com/blog16949dd5a85b5fdf.png)
+## 1. 生产者运行流程
 
-
-
-​     如上图所示，`Kafka`中客户端生成者有两个主要线程一个是调用`send`前的**用户主线程**，还有一个是负责发送的`Sender`线程。
-
-- ProducerRecord
-
-- KafkaProducer
-- RecordAccumulator
-
-- Serializer
-- Partitioner 
-- Sender
+![生产者运行流程](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/pic/kafka_%E7%94%9F%E4%BA%A7%E8%80%85%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B.png?raw=true)
 
 
 
-## 同步/异步写入&写入回调&事务写入
+
+     如上图所示，`Kafka`中客户端生成者有两个主要线程一个是调用`send`前的**用户主线程**，还有一个是负责发送的`Sender`线程。然后数据按照以下组件依次进行流动
+
+- ProducerRecord：将用户的数据以 key / value 的方式进行组织，且带有`Header`和`Timestamp`等特殊信息。多个`Producer`组成消息集合，消息集合有`v1`,`V2`两个版本，集群内部自动版本兼容，**版本兼容引发的转换会导致性能下降**。
+
+  > `Timestamp`：支持配置：`CreateTime `(`Producer `端创建时间，或者是用户定义时间)和`LogAppendTime`（`Broker`写入到`Log Segment`时间）。当使用`CreateTime`时，`Kafka broker`只接受`max.message.time.difference.ms`和本地时间范围内的时间戳。
+  >
+  > Header：提供给用户用户指定特殊信息。
+
+- KafkaProducer：线程安全`kafka topic`连接实例。
+- ProducerInterceptor :  拦截器可以使用多个，可以用于规则过滤，统一修改信息，统计失败次数等。**该类不保证线程安全，用户必须保障线程安全(累加等有共享变量场合)**
+
+>ProducerInterceptor 包括三个主要方法：
+>
+>```java
+># 发送前执行
+>public ProducerRecord<K, V> onSend(ProducerRecord<K, V> record);
+># 发送成功或者发送失败时候执行
+>public void onAcknowledgement(RecordMetadata metadata, Exception exception);
+># 拦截器退出时执行
+>public void close();
+>```
+
+- RecordAccumulator：缓存消息供`Sender` 线程批量发送，减少单次网络传输的资源消耗，通过`buffer.memory`控制总缓存大小。单个`Sender`发送批次由`batch.size`和`linger.ms`控制，满足任意一个条件触发数据发送。数据按照分区存放在`双端队列中`，数据在这里表示为: <分区, Deque< ProducerBatch>> （Deque 就是 buffer.memory，ProducerBatch 就是 batch.size 控制）。**ProducerBatch 在开启压缩的情况下，会对序列化后的数据进行压缩。**
+
+- Serializer：序列化类。
+- Partitioner ：假如`ProducerRecord`中指定了`partition`字段，则`Partitioner`失效。默认：`key`不为`null`进行`hash`计算（修改了 `Partition`数会导致映射不一致。）。 `Key`为`null`轮询发送到各个分区。
+- Sender：负责转换`partition`到`broker`地址并发送数据。`Sender` 从 `RecordAccumulator` 中获取缓存的消息之后，会进一步将原本<分区, Deque< ProducerBatch>> 的保存形式转变成 <Node, List< ProducerBatch> 的形式，其中 Node 表示 Kafka 集群的 broker 节点(逻辑分区到物理连接的转换)。
+- InFlightRequests：存放缓存了已经发出去但还没有收到响应的请求，并且提供`LeastLoadedNode`用于元数据定期更新。
+
+
+
+## 2. 同步/异步写入&写入回调&事务写入
 
 幂等vs事务
 
@@ -61,19 +86,20 @@ public class KafkaProducerDemo {
         }
     };
 
-    /**
+       /**
      * 连接初始化
      *
      * @param <K> key类型
      * @param <V> value 类型
      * @return 返回一个 Producer<k,v>对象
      */
-    private static <K, V> Producer<K, V> iniProducer() {
+    private static <K, V> Producer<K, V> iniProducer(Map<String, String> temp) {
         Properties props = new Properties();
         props.put("bootstrap.servers", "test:9093");
         props.put("acks", "all");
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        if (temp != null) temp.forEach((k, v) -> props.put(k, v));
         // 新建一个连接
         return new KafkaProducer<>(props);
     }
@@ -83,7 +109,7 @@ public class KafkaProducerDemo {
      */
     public static void insertWithoutTransaction() throws ExecutionException, InterruptedException {
         // 新建一个连接
-        Producer<String, String> producer = iniProducer();
+        Producer<String, String> producer = iniProducer(null);
 
         for (int i = 0; i < 100; i++) {
             // 每一个消息的发送必须通过new ProducerRecord<k,v > 的形式进行发送
@@ -111,10 +137,8 @@ public class KafkaProducerDemo {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         KafkaProducerDemo.insertWithoutTransaction();
         KafkaProducerDemo.insertByTransaction();
-
     }
 }
-
 ```
 
 - 同步(异步堵塞)
@@ -142,13 +166,12 @@ send.get();
 - 事务开启
 
 ```
- /**
-     * 事务提交样例
-     */
     public static void insertByTransaction() {
-        Producer<String, String> producer = iniProducer();
+        Producer<String, String> producer = iniProducer(new HashMap<String, String>() {{
+            put("transactional.id","my-transactional-id");
+        }});
 
-
+        producer.initTransactions();
         for (int i = 0; i < 100; i++) {
 
             ProducerRecord<String, String> record = new ProducerRecord<>("test", null, Integer.toString(i));
@@ -161,11 +184,91 @@ send.get();
     }
 ```
 
-## 拦截器
+## 3. 拦截器
 
-## 序列化器
+- 拦截器定义
 
-## 分区器
+```
+/**
+ * 在每一条数据中添加本地ip
+ * 统计累计成功失败次数
+ */
+public class MyKafkaInterceptor implements ProducerInterceptor<String, String> {
 
-## 消息累加器
+
+    AtomicLong succCou = new AtomicLong();
+    AtomicLong failCou = new AtomicLong();
+
+    @Override
+    public ProducerRecord<String, String> onSend(ProducerRecord<String, String> record) {
+        return new ProducerRecord(
+                record.topic(), record.partition(), record.timestamp(), record.key(), System.currentTimeMillis() + "," + record.value().toString());
+    }
+
+    @Override
+    public void onAcknowledgement(RecordMetadata metadata, Exception exception) {
+        if (exception != null) {
+            failCou.addAndGet(1);
+        } else {
+            succCou.addAndGet(1);
+        }
+        System.out.println("fail count" + failCou);
+        System.out.println("success count" + succCou);
+    }
+
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public void configure(Map<String, ?> configs) {
+    }
+}
+```
+
+- 使用方法
+
+```
+ /**
+     * 拦截器使用 demo
+     */
+    public static void ProducerInterceptor() {
+        
+        Producer<String, String> producer = iniProducer(new HashMap<String, Object>() {{
+            put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, new ArrayList<String>() {{
+                add("MyKafkaInterceptor");
+            }});
+        }});
+
+        for (int i = 0; i < 100; i++) {
+            ProducerRecord<String, String> record = new ProducerRecord<>("test", null, Integer.toString(i));
+            // 异步插入
+            producer.send(record);
+        }
+        producer.close();
+}
+```
+
+## 4. 压缩
+
+    压缩&解压流程：一般`Producer`负责压缩，`Broker`端保存数据，`Consumer`端负责压缩。
+
+**注意事项：**
+
+1. `Broker`默认没有配置压缩选项(default值为使用`Producer`提供的算法)。
+2. 当`Producer`算法与`Broker`不一致，会导致`Broker`解压，再压缩，导致性能损失( Page Cache 失效)。 
+3. `v1`与`v2`版本的消息集合，`v2`性能会更好。假如`V1`与`V2`共用，会引发版本转换导致性能下降。
+4. 因为数据传输需要`CRC`校验完整性，因此，数据校验的解压和性能校验这里无法避免。
+
+- 压缩声明方式：
+
+> 未来 kafka 会引入 压缩等级配置的支持（3.2x 版本）：https://cwiki.apache.org/confluence/display/KAFKA/KIP-390%3A+Support+Compression+Level
+
+compression.type:
+
+
+
+
+
+
 

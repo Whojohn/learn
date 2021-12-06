@@ -24,7 +24,9 @@ reference:
 - LEO(log end offset): 指向当前副本的最后一个消息的offset。
 - Controller：作用： 用于选举一个`topic`下，单个`partition`，分布在哪些`broker`上，哪个是`leader`。
 - Leader：一个`partition`对应的多个副本，多个副本存放在不同`broker`中，哪个副本是主副本就是`leader`。`Leader`负责读写(`2.4`可以配置`RackAwareReplicaSelector`从副本中读)。
-- ISR（In-Sync Replica）:  与`Leader`保存数据同步状态的副本。
+- AR: Topic 中所有的副本(预定义副本)； AR=ISR+OSR;
+- ISR(In-Sync Replica):  与`Leader`保存数据同步状态的副本。
+- OSR(Out-of-Sync Replicas): 与 leader 副本同步滞后过多的副本;
 - Watermark：由`Leader`管理的副本`offset`标记，用于标识副本间数据的同步情况。
 
 ### 1.3 队列模型

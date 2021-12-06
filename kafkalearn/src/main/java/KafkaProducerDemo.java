@@ -1,8 +1,8 @@
-import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
@@ -31,12 +31,13 @@ public class KafkaProducerDemo {
      * @param <V> value 类型
      * @return 返回一个 Producer<k,v>对象
      */
-    private static <K, V> Producer<K, V> iniProducer() {
+    private static <K, V> Producer<K, V> iniProducer(Map<String, Object> temp) {
         Properties props = new Properties();
         props.put("bootstrap.servers", "test:9093");
         props.put("acks", "all");
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        if (temp != null) temp.forEach(props::put);
         // 新建一个连接
         return new KafkaProducer<>(props);
     }
@@ -46,7 +47,7 @@ public class KafkaProducerDemo {
      */
     public static void insertWithoutTransaction() throws ExecutionException, InterruptedException {
         // 新建一个连接
-        Producer<String, String> producer = iniProducer();
+        Producer<String, String> producer = iniProducer(null);
 
         for (int i = 0; i < 100; i++) {
             // 每一个消息的发送必须通过new ProducerRecord<k,v > 的形式进行发送
@@ -76,9 +77,11 @@ public class KafkaProducerDemo {
      * 事务提交样例
      */
     public static void insertByTransaction() {
-        Producer<String, String> producer = iniProducer();
+        Producer<String, String> producer = iniProducer(new HashMap<String, Object>() {{
+            put("transactional.id", "my-transactional-id");
+        }});
 
-
+        producer.initTransactions();
         for (int i = 0; i < 100; i++) {
 
             ProducerRecord<String, String> record = new ProducerRecord<>("test", null, Integer.toString(i));
@@ -90,9 +93,30 @@ public class KafkaProducerDemo {
         producer.close();
     }
 
+    /**
+     * 拦截器使用 demo
+     */
+    public static void ProducerInterceptor() {
+
+        Producer<String, String> producer = iniProducer(new HashMap<String, Object>() {{
+            put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, new ArrayList<String>() {{
+                add("MyKafkaProducerInterceptor");
+            }});
+        }});
+
+        for (int i = 0; i < 100; i++) {
+            ProducerRecord<String, String> record = new ProducerRecord<>("test", null, Integer.toString(i));
+            // 异步插入
+            producer.send(record);
+        }
+        producer.close();
+    }
+
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         KafkaProducerDemo.insertWithoutTransaction();
         KafkaProducerDemo.insertByTransaction();
+        KafkaProducerDemo.ProducerInterceptor();
     }
 }
+
