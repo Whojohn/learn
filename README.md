@@ -23,3 +23,6 @@ https://github.com/Whojohn/learn/tree/master/flinklearn)
 
 - [Elasticsearch](
   https://github.com/Whojohn/learn/tree/master/docs/es)
+
+- [Kafka](
+  https://github.com/Whojohn/learn/tree/master/kafkalearn)  
