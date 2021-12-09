@@ -1,13 +1,8 @@
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class KafkaConsumerDemo {
     /**
@@ -20,7 +15,6 @@ public class KafkaConsumerDemo {
     private static <K, V> KafkaConsumer<K, V> iniConsumer(Map<String, Object> temp) {
         Properties props = new Properties();
         props.put("bootstrap.servers", "test:9093");
-        props.put("acks", "all");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         if (temp != null) temp.forEach(props::put);
@@ -42,9 +36,9 @@ public class KafkaConsumerDemo {
         consumer.close();
     }
 
-    public static void manualCommitConsumer() {
+    public static void manualCommitConsumer() throws InterruptedException {
         Consumer<String, String> consumer = iniConsumer(new HashMap<String, Object>() {{
-            put("group.id", "test1");
+            put("group.id", "test2");
             put("auto.offset.reset", "earliest");
             put("enable.auto.commit", "false");
         }});
@@ -53,13 +47,48 @@ public class KafkaConsumerDemo {
 
         for (ConsumerRecord<String, String> record : records) {
             System.out.println(record.offset() + ": " + record.value());
+            try {
+                consumer.commitSync(new HashMap<TopicPartition, OffsetAndMetadata>() {{
+                    put(new TopicPartition(record.topic(), record.partition()),
+                            new OffsetAndMetadata(record.offset() + 1));
+                }});
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
         }
-        consumer.commitSync();
+
         consumer.close();
     }
 
-    public static void main(String[] args) {
-        // KafkaConsumerDemo.autoCommitConsumer();
+    public static void manualCommitExactlyOnceConsumer() throws InterruptedException {
+        Consumer<String, String> consumer = iniConsumer(new HashMap<String, Object>() {{
+            put("group.id", "test1");
+            put("auto.offset.reset", "earliest");
+            put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+            put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+        }});
+        consumer.assign(new ArrayList<TopicPartition>() {{
+            add(new TopicPartition("test", 0));
+        }});
+        consumer.seek(new TopicPartition("test", 0), 10l);
+        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(5));
+
+
+        for (ConsumerRecord<String, String> record : records) {
+            System.out.println(record.offset() + ": " + record.value());
+            consumer.commitSync(new HashMap<TopicPartition, OffsetAndMetadata>() {{
+                put(new TopicPartition(record.topic(), record.partition()),
+                        new OffsetAndMetadata(record.offset() + 1));
+            }});
+        }
+
+        consumer.close();
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        KafkaConsumerDemo.autoCommitConsumer();
         KafkaConsumerDemo.manualCommitConsumer();
+        KafkaConsumerDemo.manualCommitExactlyOnceConsumer();
     }
 }
