@@ -140,23 +140,27 @@ kafka中的幂等：kafka 中的幂等只能保障一个`Topic`单`Partition`中
 ![LOG 中数据](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/pic/kafka_transaction_log_satus.png?raw=true)
 
 
-
 **LSO状态**
+
 ![LSO](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/pic/kafka_transaction_LSO_satus_in_log.png?raw=true)
 
 
 **抛弃大于 LSO 的数据**
+
 ![抛弃大于 LSO 的数据](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/pic/kafka_transaction_consumer_read_by_LSO.png?raw=true)
 
 **2.** 拉取`Aborted Transaction Index `文件，过滤丢弃的消息。如下图(假如丢弃 2 和 4)：
 
 **Aborted Transaction Index 文件**
+
 ![abort 文件](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/pic/kafka_transaction_abort_index_file.png?raw=true)
+
+**按照abort 文件抛弃后数据**
 
 ![抛弃abort的数据](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/pic/kafka_transaction_abort_index_file.png?raw=true)
 
 
 
 ### 总结
-![事务消费和生产例子](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/pic/kafka_transtion_with_consumer_producer.pngraw=true)
+![事务消费和生产例子](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/pic/kafka_transtion_with_consumer_producer.png?raw=true)
 
