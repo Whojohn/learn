@@ -29,6 +29,7 @@ reference:
 - OSR(Out-of-Sync Replicas): 与 leader 副本同步滞后过多的副本;
 - Watermark：由`Leader`管理的副本`offset`标记，用于标识副本间数据的同步情况。
 
+
 ### 1.3 队列模型
 
 - 点对点(peer to peer)

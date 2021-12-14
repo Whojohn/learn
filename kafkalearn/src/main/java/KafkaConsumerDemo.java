@@ -41,6 +41,7 @@ public class KafkaConsumerDemo {
             put("group.id", "test2");
             put("auto.offset.reset", "earliest");
             put("enable.auto.commit", "false");
+            put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG,"30000");
         }});
         consumer.subscribe(Collections.singletonList("test"));
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(5));
@@ -87,8 +88,8 @@ public class KafkaConsumerDemo {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        KafkaConsumerDemo.autoCommitConsumer();
-        KafkaConsumerDemo.manualCommitConsumer();
+//        KafkaConsumerDemo.autoCommitConsumer();
+//        KafkaConsumerDemo.manualCommitConsumer();
         KafkaConsumerDemo.manualCommitExactlyOnceConsumer();
     }
 }

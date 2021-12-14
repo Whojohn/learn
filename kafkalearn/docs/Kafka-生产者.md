@@ -40,10 +40,13 @@
 >public void close();
 >```
 
-- RecordAccumulator：缓存消息供`Sender` 线程批量发送，减少单次网络传输的资源消耗，通过`buffer.memory`控制总缓存大小。单个`Sender`发送批次由`batch.size`和`linger.ms`控制，满足任意一个条件触发数据发送。数据按照分区存放在`双端队列中`，数据在这里表示为: <分区, Deque< ProducerBatch>> （Deque 就是 buffer.memory，ProducerBatch 就是 batch.size 控制）。**ProducerBatch 在开启压缩的情况下，会对序列化后的数据进行压缩。**
 
-- Serializer：序列化类。
+
+- Serializer：序列化类，负责。
 - Partitioner ：假如`ProducerRecord`中指定了`partition`字段，则`Partitioner`失效。默认：`key`不为`null`进行`hash`计算（修改了 `Partition`数会导致映射不一致。）。 `Key`为`null`轮询发送到各个分区。
+
+- RecordAccumulator：缓存消息供`Sender` 线程批量发送，减少单次网络传输的资源消耗，通过`buffer.memory`控制总缓存大小。单个`Sender`发送批次由`batch.size`和`linger.ms`控制，满足任意一个条件触发数据发送。**batch是一个特殊优化的缓存，利用数组对象复用，减少GC，！！！但是！！！能够使用batch的前提是一条数据必须小于batch.size，对于大于batch.size必须新建对象。因此，对于长文本，提高batch.size能够减少`GC`消耗。**数据按照分区存放在`双端队列中`，数据在这里表示为: <分区, Deque< ProducerBatch>> （Deque 就是 buffer.memory，ProducerBatch 就是 batch.size 控制）。**ProducerBatch 在开启压缩的情况下，会对序列化后的数据进行压缩。**
+
 - Sender：负责转换`partition`到`broker`地址并发送数据。`Sender` 从 `RecordAccumulator` 中获取缓存的消息之后，会进一步将原本<分区, Deque< ProducerBatch>> 的保存形式转变成 <Node, List< ProducerBatch> 的形式，其中 Node 表示 Kafka 集群的 broker 节点(逻辑分区到物理连接的转换)。
 - InFlightRequests：存放缓存了已经发出去但还没有收到响应的请求，并且提供`LeastLoadedNode`用于元数据定期更新。
 

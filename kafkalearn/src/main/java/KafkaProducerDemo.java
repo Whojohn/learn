@@ -79,17 +79,34 @@ public class KafkaProducerDemo {
     public static void insertByTransaction() {
         Producer<String, String> producer = iniProducer(new HashMap<String, Object>() {{
             put("transactional.id", "my-transactional-id");
+            put("max.block.ms", "10000");
+            put("transaction.timeout.ms", "10000");
+
         }});
 
         producer.initTransactions();
+
         for (int i = 0; i < 100; i++) {
 
-            ProducerRecord<String, String> record = new ProducerRecord<>("test", null, Integer.toString(i));
-            producer.beginTransaction();
-            producer.send(record, debugLog);
-            // 注意不要逐条数据开启一个事务，否则性能会很差，这里只是演示
-            producer.commitTransaction();
+            try {
+                producer.beginTransaction();
+
+                ProducerRecord<String, String> record = new ProducerRecord<>("test", null, Integer.toString(i));
+                producer.send(record, debugLog);
+                // 模拟事务时间超期
+                //                Thread.sleep(12000);
+                // 关闭 broker 模拟服务端失败
+                //                Thread.sleep(2000);
+
+                // 注意不要逐条数据开启一个事务，否则性能会很差，这里只是演示
+                producer.commitTransaction();
+            } catch (Exception e) {
+                producer.abortTransaction();
+            }
         }
+
+
+
         producer.close();
     }
 
