@@ -180,12 +180,13 @@ LogManager 只负责Log管理工作，不负责数据的写入&读取。写入�
 
 #### 5.2.3 leader-epoch-checkpoint （leader 特有）
 
-> 0 //版本号
-> 1 //下面的记录行数
-> 29 2485991681 #leader epoch ，可以看到有两位值（epoch，offset）。
-> // epoch表示leader的版本号，从0开始，当leader变更过1次时epoch就会+1
-> // offset则对应于该epoch版本的leader写入第一条消息的位移。可以理解为用户可以消费到的最早数据位移。与kafka.tools.GetOffsetShell --time -2获取到的值是一致的。
-
+```
+ 0 //版本号
+ 1 //下面的记录行数
+ 29 2485991681 #leader epoch ，可以看到有两位值（epoch，offset）。 
+ // epoch表示leader的版本号，从0开始，当leader变更过1次时epoch就会+1
+ // offset则对应于该epoch版本的leader写入第一条消息的位移。可以理解为用户可以消费到的最早数据位移。与kafka.tools.GetOffsetShell --time -2获取到的值是一致的。
+```
 ### 5.3 日志的管理
 
 #### 5.3.1 磁盘写入
