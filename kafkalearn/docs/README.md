@@ -7,3 +7,7 @@
 - [Kafka-生产者](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/Kafka-生产者.md)
 
 - [Kafka-消费者](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/Kafka-消费者.md)
+
+- [Kafka-幂等](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/Kafka-消费者.md)
+
+- [Kafka-Server(架构详解)](https://github.com/Whojohn/learn/blob/master/kafkalearn/docs/Kafka-server详解.md)

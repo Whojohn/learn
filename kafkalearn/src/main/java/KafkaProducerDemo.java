@@ -132,8 +132,8 @@ public class KafkaProducerDemo {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         KafkaProducerDemo.insertWithoutTransaction();
-        KafkaProducerDemo.insertByTransaction();
-        KafkaProducerDemo.ProducerInterceptor();
+//        KafkaProducerDemo.insertByTransaction();
+//        KafkaProducerDemo.ProducerInterceptor();
     }
 }
 

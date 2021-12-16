@@ -32,7 +32,7 @@
 
 **处理工作：**
 
-1. updateAssignmentMetadataIfNeeded： 负责初始化 `Coordinator`，检测`Reblance`，初始化各个分区的`Offset`信息，记录`Group`消费位置，假如初始化没有`Group`消费信息，`auto.offset.reset`获取。
+1. updateAssignmentMetadataIfNeeded： 负责初始化 `Coordinator`，检测`Reblance`，初始化各个分区的`Offset`信息，记录`Group`消费位置，更新可读`offset`。假如初始化没有`Group`消费信息，`auto.offset.reset`获取。
 2. 拉取消息：尝试从本地缓存拉取信息，没有则从远程定期尝试拉取。
 3. 提前发起异步的下一轮次的数据获取。
 4. 假如使用了消费者拦截器，使用拦截器。
