@@ -142,10 +142,16 @@
 #### 3.3.3 对象的访问与定位
 
 - 访问定位方式
-> 无论是哪种访问方式，都必须解决，访问实例数据和对象类型数据访问的方法。
-1. 使用句柄
 
+> 无论是哪种访问方式，都必须解决，访问实例数据和对象类型数据访问的方法。hotspot 使用的是指针。
+![句柄访问定位](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/object-loc-reference?raw=true)
+1. 使用句柄
+> 缺点: 对象的访问需要多访问一次。（句柄的开销）。
+> 优点: GC 只需要修改句柄中的地址。
+![指针访问定位](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/object-loc-forward.png?raw=true)
 2. 直接指针
+> 缺点：GC需要修改栈地址
+> 优点：直接访问
 
 #### 3.3.4 对象的引用方式
 
