@@ -6,13 +6,15 @@
 >
 > https://github.com/dunwu/javacore/blob/master/docs/jvm/jvm-memory.md
 >
+> https://tech.meituan.com/2020/11/12/java-9-cms-gc.html
+>
 > **周志明《深入理解 Java 虚拟机》**
 
 ## 1. Java 内存区域 (运行时数据区)
 
 > 注意！！！jmm 是 java 内存模型，说的是 volatile 相关的问题，与jvm 没有必然联系！！！https://en.wikipedia.org/wiki/Java_memory_model
 
-![jvm 架构](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/jvm-arch.png?raw=true)
+![jvm 架构](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/jvm-cms-memory-model.jpg?raw=true)
 
 ### 1.1 栈(内存不共享区域)
 
@@ -149,12 +151,12 @@ Survivor：`Eden` 与 `Survivor` 比率是`4：1`，两者构成标记复制算�
 
 - 安全点
 
->       每一条命令都频繁的修改`oopmap`会引发性能下降，`hotspot`通过引入安全点，在执行一些特定的操作时(只有到达安全点时)，才允许修改`oopmap`。`hotspot`的`GC`也只能在安全点执行。
-> 安全点所在位置: “长时间执行”的最明显特征就是指令序列的复用，例如方法调用、循环跳转、异常跳转 等都属于指令序列复用，所以只有具有这些功能的指令才会产生安全点。因此一个长期执行的循环会导致`GC`耗时过长。优化方法：`XX:+UseCountedLoopSafepoints` 开启。
+>   每一条命令都频繁的修改`oopmap`会引发性能下降，`hotspot`通过引入安全点，在执行一些特定的操作时(只有到达安全点时)，才允许修改`oopmap`。`hotspot`的`GC`也只能在安全点执行。
+>   安全点所在位置: “长时间执行”的最明显特征就是指令序列的复用，例如方法调用、循环跳转、异常跳转 等都属于指令序列复用，所以只有具有这些功能的指令才会产生安全点。因此一个长期执行的循环会导致`GC`耗时过长。优化方法：`XX:+UseCountedLoopSafepoints` 开启。
 
 - 安全区域
 
->       `sleep`或`block`状态的线程无法马上进入到安全点，此时假如需要`GC`，`hotspot`会认为当前进入到安全区域中，在这个阶段`oopmap`不会改变，那么`hotspot`执行`gc`是安全的。**但是，该线程退出安全区域时候，必须要检测是否gc正在执行，假如正在执行，必须等待gc完成。**
+> `sleep`或`block`状态的线程无法马上进入到安全点，此时假如需要`GC`，`hotspot`会认为当前进入到安全区域中，在这个阶段`oopmap`不会改变，那么`hotspot`执行`gc`是安全的。**但是，该线程退出安全区域时候，必须要检测是否gc正在执行，假如正在执行，必须等待gc完成。**
 
 ### 2.3.1 Serial 收集器
 

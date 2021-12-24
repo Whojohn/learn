@@ -80,7 +80,7 @@
 - **block start table**：块起始表
 - **card table**：卡表，解决对象相互引用，Minor GC时也必须扫描**完整**老年代(防止老年代持有年轻代对象)，消耗过大的问题。**卡表**的具体策略是将老年代的空间分成大小为512B的若干张卡（card）。卡表本身是单字节数组，数组中的每个元素对应着一张卡，当发生老年代引用新生代时，虚拟机将该卡对应的卡表元素设置为适当的值。**卡表还有另外的作用，标识并发标记阶段哪些块被修改过**(因为 cms 并发标识其他线程也在同时修改对象，需要通过卡表，记录那些对象在并发阶段被修改了。)。
 - **write barrier**: **hotspot 写屏障对一个对象引用进行写操作（即引用赋值）之前或之后执行特定操作。实现了标识并发标记阶段被修改的对象。**
-- **GC map（oopmap）**：OopMap 记录了栈中那些对象是引用对象。它的主要目的是在 Java 堆栈上找到 GC 根，并在对象在堆内移动时更新引用。
+- **GC map（oopmap）**：OopMap 记录了栈中那些对象是引用对象。它的主要目的是在 Java 堆栈上找到 GC 根(GCRoot)，并在对象在堆内移动时更新引用。
 - **young generation**(g1不区分)：年轻代
 - **old generation**(g1不区分)：老年代
 - **eden**
@@ -144,7 +144,7 @@
 - 访问定位方式
 
 > 无论是哪种访问方式，都必须解决，访问实例数据和对象类型数据访问的方法。hotspot 使用的是指针。
-![句柄访问定位](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/object-loc-reference?raw=true)
+![句柄访问定位](https://github.com/Whojohn/learn/blob/master/docs/java/jvm-doc/pic/object-loc-reference.png?raw=true)
 1. 使用句柄
 > 缺点: 对象的访问需要多访问一次。（句柄的开销）。
 > 优点: GC 只需要修改句柄中的地址。
