@@ -34,3 +34,5 @@
 -  [Flink_工作线程&mailbox并发控制](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B&mailbox%E6%9C%BA%E5%88%B6.md)
 
 
+-  [Flink HDFS 相关问题](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_HDFS%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98.md)
+
