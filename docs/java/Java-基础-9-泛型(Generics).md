@@ -126,11 +126,9 @@ String last = (String) p.getLast();
 >
 >这是因为：**使用泛型时，任何具体的类型信息都被擦除了**。这意味着：`ArrayList<Object>` 和 `ArrayList<String>` 在运行时，JVM 将它们视为同一类型(同为ArrayList)。只有在get set 对象时候才会进行类型转换(编译替换)。
 
-
-
        **泛型不能用于显式地引用运行时类型的操作之中，例如：类型转型、instanceof 操作和 new 表达式。因为所有关于参数的类型信息都丢失了**。
 
-​		**泛型不能向上转型**(编译器**检测规则**)；如：ArrayList<Integer>`向上转型为`ArrayList<Number>`或`List<Number>，编译会报错，是因为`ArrayList<Integer>`转型为`ArrayList<Number>`类型后，这个`ArrayList<Number>`就可以接受`Float`类型，因为`Float`是`Number`的子类。但是，`ArrayList<Number>`实际上和`ArrayList<Integer>`是同一个对象，也就是`ArrayList<Integer>`类型，它不可能接受`Float`类型， 所以在获取`Integer`的时候将产生`ClassCastException`。编译器为了避免这种错误，根本就不允许把`ArrayList<Integer>`转型为`ArrayList<Number>`。
+		**泛型不能向上转型**(编译器**检测规则**)；如：ArrayList<Integer>`向上转型为`ArrayList<Number>`或`List<Number>，编译会报错，是因为`ArrayList<Integer>`转型为`ArrayList<Number>`类型后，这个`ArrayList<Number>`就可以接受`Float`类型，因为`Float`是`Number`的子类。但是，`ArrayList<Number>`实际上和`ArrayList<Integer>`是同一个对象，也就是`ArrayList<Integer>`类型，它不可能接受`Float`类型， 所以在获取`Integer`的时候将产生`ClassCastException`。编译器为了避免这种错误，根本就不允许把`ArrayList<Integer>`转型为`ArrayList<Number>`。
 
 如：
 

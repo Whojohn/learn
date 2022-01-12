@@ -9,7 +9,10 @@
 >
 > https://kafka.apache.org/26/javadoc/org/apache/kafka/clients/producer/ProducerInterceptor.html
 
-**注意，一般情况下broker 处理的是由多条数据组合成的数据集(虽然一条数据对应offset加一)。**
+注意
+1. 一般情况下broker 处理的是由多条数据组合成的数据集(虽然一条数据对应offset加一)。
+2. `Kafka`数据可靠性需要`acks`保障，0时候，无需任何`replace` 成功即标为成功。1时，必须保障`leader`的写入成功，`all`或者`-1`时，必须满足`min.insync.replicas`最小`in-sync`写入副本。
+
 
 ## 1. 生产者运行流程
 
@@ -26,7 +29,7 @@
   >
   > Header：提供给用户用户指定特殊信息。
 
-- KafkaProducer：线程安全`kafka topic`连接实例。
+- KafkaProducer：线程安全`kafka topic`连接实例(单例需要自行实现，线程安全是`RecordAccumulator` 本质是`ConcurrentMap`)。
 - ProducerInterceptor :  拦截器可以使用多个，可以用于规则过滤，统一修改信息，统计失败次数等。**该类不保证线程安全，用户必须保障线程安全(累加等有共享变量场合)**
 
 >ProducerInterceptor 包括三个主要方法：
@@ -45,7 +48,8 @@
 - Serializer：序列化类，负责。
 - Partitioner ：假如`ProducerRecord`中指定了`partition`字段，则`Partitioner`失效。默认：`key`不为`null`进行`hash`计算（修改了 `Partition`数会导致映射不一致。）。 `Key`为`null`轮询发送到各个分区。
 
-- RecordAccumulator：缓存消息供`Sender` 线程批量发送，减少单次网络传输的资源消耗，通过`buffer.memory`控制总缓存大小。单个`Sender`发送批次由`batch.size`和`linger.ms`控制，满足任意一个条件触发数据发送。**batch是一个特殊优化的缓存，利用数组对象复用，减少GC，！！！但是！！！能够使用batch的前提是一条数据必须小于batch.size，对于大于batch.size必须新建对象。因此，对于长文本，提高batch.size能够减少`GC`消耗。**数据按照分区存放在`双端队列中`，数据在这里表示为: <分区, Deque< ProducerBatch>> （Deque 就是 buffer.memory，ProducerBatch 就是 batch.size 控制）。**ProducerBatch 在开启压缩的情况下，会对序列化后的数据进行压缩。**
+- RecordAccumulator：缓存消息供`Sender` 线程批量发送，减少单次网络传输的资源消耗，通过`buffer.memory`控制总缓存大小。单个`Sender`发送批次由`batch.size`和`linger.ms`控制，满足任意一个条件触发数据发送。**batch是一个特殊优化的缓存，利用数组对象复用，减少GC，！！！但是！！！能够使用batch的前提是一条数据必须小于batch.size，对于大于batch.size必须新建对象。因此，对于长文本，提高batch.size能够减少`GC`消耗。**数据按照分区存放在`双端队列中`，数据在这里表示为: <分区, Deque< ProducerBatch>> （Deque 就是 buffer.memory，ProducerBatch 就是 batch.size 控制）。**ProducerBatch 在开启压缩的情况下，会对序列化后的数据进行压缩。RecordAccumulator 数据存储底层是ConcurrentMap<TopicPartition, Deque<ProducerBatch>>,插入时候`synchronized`修饰`Deque`对象,因此保障了生产者插入的线程安全**
+
 
 - Sender：负责转换`partition`到`broker`地址并发送数据。`Sender` 从 `RecordAccumulator` 中获取缓存的消息之后，会进一步将原本<分区, Deque< ProducerBatch>> 的保存形式转变成 <Node, List< ProducerBatch> 的形式，其中 Node 表示 Kafka 集群的 broker 节点(逻辑分区到物理连接的转换)。
 - InFlightRequests：存放缓存了已经发出去但还没有收到响应的请求，并且提供`LeastLoadedNode`用于元数据定期更新。
@@ -261,7 +265,7 @@ public class MyKafkaInterceptor implements ProducerInterceptor<String, String> {
 1. `Broker`默认没有配置压缩选项(default值为使用`Producer`提供的算法)。
 2. 当`Producer`算法与`Broker`不一致，会导致`Broker`解压，再压缩，导致性能损失( Page Cache 失效)。 
 3. `v1`与`v2`版本的消息集合，`v2`性能会更好。假如`V1`与`V2`共用，会引发版本转换导致性能下降。
-4. 因为数据传输需要`CRC`校验完整性，因此，数据校验的解压和性能校验这里无法避免。
+4. 因为数据传输需要`CRC`校验完整性，校验**不需要解压**，校验没有使用`jni`方法，使用的是`Hadoop CRC32`java 实现(该实现比起`native`方法提高了在小文件下性能损耗)，配合`ByteBuffer`直接读取内存数据实现校验。
 
 - 压缩声明方式：
 
