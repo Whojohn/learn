@@ -1,7 +1,8 @@
 # Flink 回忆录
-**除特殊说明，所有版本分析，资料基于 Flink 1.12** 
 
-## 基础回顾
+## Stream 基础回顾
+> **除特殊说明，所有版本分析，资料基于 Flink 1.12** 
+
 -  [Flink-1-概念&常用术语](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_概念&常用术语.md)
 
 -  [Flink-2-架构(flink runtime)](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_架构.md)
@@ -25,6 +26,12 @@
 -  [Flink-11-容错&checkpoint](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_容错&checkpoint.md)
 
 -  [Flink-12-内存配置相关](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_内存模型与配置.md)
+
+## Sql 回顾
+> 由于 Sql 新版本拥有更多功能，因此按照 1.14 进行回顾，顺便熟悉新特性。
+
+-  [Flink_Sql表概念](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/sql/Flink_Sql表概念.md)
+
 
 ## 源码分析 & 特殊功能实现
 
