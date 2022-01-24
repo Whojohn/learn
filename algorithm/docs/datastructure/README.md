@@ -42,7 +42,7 @@ reference:
   
 
 ### 1.2 链表
-- [ 数据结构-链表（详解） ](https://github.com/Whojohn/learn/blob/master/docs/datastructure/linklist.md)
+- [ 数据结构-链表（详解） ](https://github.com/Whojohn/learn/blob/master/algorithm/docs/datastructure/linklist.md)
 
 - python（python 原生中只有 deque， deque 底层是双向链表）
 
@@ -204,7 +204,7 @@ public class LinkList<T> {
 
 > 队列是一种先进先出的顺序表，可以用链表和数组实现。
 
-### [数据结构-栈队列（详解） ](https://github.com/Whojohn/learn/blob/master/docs/datastructure/linklist.md)
+### [数据结构-栈队列（详解） ](https://github.com/Whojohn/learn/blob/master/algorithm/docs/datastructure/linklist.md)
 
 
 ## 2. 散列表(Hash表，线性表的应用)
@@ -231,11 +231,11 @@ public class LinkList<T> {
 
 
 ### 3. 树
-- [ 数据结构-树（详解） ](https://github.com/Whojohn/learn/blob/master/docs/datastructure/tree.md)
+- [ 数据结构-树（详解） ](https://github.com/Whojohn/learn/blob/master/algorithm/docs/datastructure/tree.md)
 
 
 
 ### 4. 字符串
-- [ 数据结构-字符串（详解） ](https://github.com/Whojohn/learn/blob/master/docs/datastructure/string.md)
+- [ 数据结构-字符串（详解） ](https://github.com/Whojohn/learn/blob/master/algorithm/docs/datastructure/string.md)
 
 
