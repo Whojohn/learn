@@ -9,6 +9,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.types.Row;
 import org.apache.flink.util.Collector;
+import source.TestSource;
 
 import java.util.ArrayList;
 import java.util.Arrays;

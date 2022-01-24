@@ -7,6 +7,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.types.Row;
+import source.TestSource;
 
 import java.time.Duration;
 import java.util.ArrayList;

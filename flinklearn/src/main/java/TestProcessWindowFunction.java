@@ -8,6 +8,7 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.types.Row;
 import org.apache.flink.util.Collector;
+import source.TestSource;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

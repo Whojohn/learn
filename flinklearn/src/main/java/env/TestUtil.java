@@ -7,6 +7,7 @@ import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;
 
+import java.sql.BatchUpdateException;
 import java.util.Properties;
 
 public class TestUtil {
@@ -14,6 +15,8 @@ public class TestUtil {
 
     public static StreamExecutionEnvironment iniEnv(int parall) {
         // 解决 hadoop simple auth
+
+
         Properties properties = System.getProperties();
         properties.setProperty("HADOOP_USER_NAME", "hadoop");
 

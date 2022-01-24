@@ -33,6 +33,28 @@
    外层SQL可以通过AS的别名查询数据。
    ```
 
+8. **Event-time 的声明需要满足：1. 列类型为timestamp; 2.必须声明watermark; 如下，不支持多个 Event-time声明,即不支持多个watermamrk声明**
+
+```
+CREATE TABLE datagen (
+ id INT,
+ rate INT,
+ f_random_str STRING,
+// 允许多个 timestamp 类型
+ ts AS TO_TIMESTAMP(FROM_UNIXTIME(((UNIX_TIMESTAMP(CAST(CURRENT_TIMESTAMP AS STRING)))/1000)*1000, 'yyyy-MM-dd HH:mm:ss')) , 
+// 允许多个 timestamp 类型
+ es AS TO_TIMESTAMP(FROM_UNIXTIME(((UNIX_TIMESTAMP(CAST(CURRENT_TIMESTAMP AS STRING)))/1000)*1000, 'yyyy-MM-dd HH:mm:ss')) ,
+// event-time 必须声明watermark，watermark 只能声明一个
+ watermark for ts as ts ,
+ primary key(id) not enforced
+) WITH (
+ 'connector' = 'datagen',
+ 'fields.id.min'='1',
+ 'fields.id.max'='100',
+  'rows-per-second'='1000',
+ 'fields.f_random_str.length'='2'
+);
+```
    
 
    
@@ -123,6 +145,10 @@ GROUP BY TUMBLE(user_action_time, INTERVAL '5' second);
 ```
 
 ### 1.2 Event Time
+
+**注意：**
+1. `Event-time` 的声明在sql 中必须满足：**1. `timestamp` 类型。 2 `timestamp` 类型定义`WaterMark`将会自动转化为`Event-time`.**
+2. **`Flink Sql `中`event-time`数据类型(`Sql`数据类型)为`Rowtime`,`desc table`时候可见该信息**。
 
 #### 1.2.1 WaterMark 定义
 
