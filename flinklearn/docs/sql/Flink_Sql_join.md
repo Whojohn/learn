@@ -12,17 +12,17 @@
 
 4. **`Interval join`，`Tmeporal` 底层基于`state`和`timer`，因此有两种提高性能的方式**
 
-   >方法1 ：(`timer`状态放入 `heap`，默认开启 `rocksdb` 后放入 `rocksdb`，性能会比 `heap` 降低很多)：
+   >方法1 ：(`timer`状态放入 `heap`，默认开启 `rocksdb` 后放入 `rocksdb`，性能会比 `heap` 降低很多;！！！但是使用 `heap` 作为作为状态后端，会有`exceeds the maximum akka framesize` 的风险！！！)：
    >
    >state.backend.rocksdb.timer-service.factory: HEAP
    >
-   >> `interval join` 大概有 3% 到 5% 提高，但是由于`timer`在`interval join`中用于状态清除。
+   >> `interval join` 大概有 3% 到 5% 提高，但是由于`timer`在`interval join`中用于状态清除, 性能还是比较差。
    >
    >方法2：
    >
    >调整`Rocksdb`状态量策略，如`state.backend.rocksdb.block.blocksize`， 太大会影响读性能，太小会影响写性能和磁盘空间利用率。(根据数据和磁盘特性选择大小)
    >
-   >！！！方法1对于内存占用很敏感，容易出现 oom，现实中一般不采用！！！
+   >！！！方法1对于内存占用很敏感，容易出现 oom，现实中一般不采用，并且有akka 异常的风险！！！
    >
    >！！！尝试对时间戳钝化的方式(秒级别时间戳变为分钟级，对于修改有一定时间间隔的场景，能保证数据准确性)，实现 Timer 批次触发(总次数不变)， 对Heap 占用不变，没有任何性能提高(因为 Timer 队列中仍需要保留每一条数据)！！！
 
