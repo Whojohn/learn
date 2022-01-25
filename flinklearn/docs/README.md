@@ -32,7 +32,9 @@
 
 -  [Flink_Sql表概念](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/sql/Flink_Sql表概念.md)
 
--  [Flink_Sql时间与窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/sql/Flink_Sql时间与窗口.md)
+-  [Flink_Sql时间与窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/sql/Flink_Sql时间与窗口.md
+
+-  [Flink_Sql_join(附简单性能测试)](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/sql/Flink_Sql_join.md
 
 ## 源码分析 & 特殊功能实现
 
