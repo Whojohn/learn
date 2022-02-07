@@ -46,3 +46,5 @@
 
 -  [Flink HDFS 相关问题](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_HDFS%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98.md)
 
+
+-  [Flink on Yarn 日志-历史任务如何查看tm日志(yarn logs源码解析&问题解决)](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_on_Yarn%E6%97%A5%E5%BF%97_tm%E6%97%A5%E5%BF%97%E6%9F%A5%E7%9C%8B%E9%97%AE%E9%A2%98.md)
