@@ -1,5 +1,5 @@
 # Flink监控
-![flink窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/flink监控.svg?raw=true)
+![flink窗口](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink监控.svg?raw=true)
 
 
 - 监控的目的
