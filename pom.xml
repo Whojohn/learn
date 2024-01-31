@@ -13,6 +13,7 @@
         <module>algorithm</module>
         <module>flinklearn</module>
         <module>kafkalearn</module>
+        <module>flink-shim</module>
     </modules>
     <properties>
         <java.version>1.8</java.version>
