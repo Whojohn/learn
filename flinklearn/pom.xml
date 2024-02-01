@@ -107,9 +107,53 @@
             <scope>provided</scope>
         </dependency>
 
-
-
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>mac</id>
+            <dependencies>
+                <!-- rocksdb -->
+                <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-statebackend-rocksdb -->
+                <dependency>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+                    <version>${flink.version}</version>
+                    <scope>provided</scope>
+                    <exclusions>
+                        <exclusion>
+                            <artifactId>frocksdbjni</artifactId>
+                            <groupId>com.data-artisans</groupId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
 
+                <dependency>
+                    <groupId>com.ververica</groupId>
+                    <artifactId>frocksdbjni</artifactId>
+                    <version>6.20.3-ververica-2.0</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>windows</id>
+            <dependencies>
+                <!-- rocksdb -->
+                <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-statebackend-rocksdb -->
+                <dependency>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
+                    <version>${flink.version}</version>
+                    <scope>provided</scope>
+                    <exclusions>
+                        <exclusion>
+                            <artifactId>slf4j-api</artifactId>
+                            <groupId>org.slf4j</groupId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>
