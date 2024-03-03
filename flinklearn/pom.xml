@@ -13,7 +13,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <flink.version>1.12.4</flink.version>
+        <flink.version>1.13.6</flink.version>
         <scala.binary.version>2.12</scala.binary.version>
         <kafka.version>2.4.1</kafka.version>
         <hadoop.version>3.1.3</hadoop.version>
@@ -73,6 +73,37 @@
             <scope>provided</scope>
         </dependency>
 
+
+        <!-- 本地测试配置，将会显示flink 框架日志-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.25</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- 测试依赖包       -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>2.0.7</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito2</artifactId>
+            <version>2.0.7</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- flink json format -->
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -105,6 +136,8 @@
             <version>2.12.1</version>
             <scope>provided</scope>
         </dependency>
+
+
 
     </dependencies>
 
@@ -142,15 +175,9 @@
                 <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-statebackend-rocksdb -->
                 <dependency>
                     <groupId>org.apache.flink</groupId>
-                    <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
+                    <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
                     <version>${flink.version}</version>
                     <scope>provided</scope>
-                    <exclusions>
-                        <exclusion>
-                            <artifactId>slf4j-api</artifactId>
-                            <groupId>org.slf4j</groupId>
-                        </exclusion>
-                    </exclusions>
                 </dependency>
             </dependencies>
         </profile>
