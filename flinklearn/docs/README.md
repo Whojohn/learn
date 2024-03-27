@@ -57,3 +57,5 @@
 -  [Flink 监控简述](https://github.com/Whojohn/learn/tree/master/flinklearn/docs/Flink%E7%9B%91%E6%8E%A7.md)
 
 -  [Flink sql state总结](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_sql_state_%E6%80%BB%E7%BB%93.md)
+
+-  [sla保障-状态问题-总结](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/sla%E4%BF%9D%E9%9A%9C-%E7%8A%B6%E6%80%81%E9%97%AE%E9%A2%98-%E6%80%BB%E7%BB%93.md)
