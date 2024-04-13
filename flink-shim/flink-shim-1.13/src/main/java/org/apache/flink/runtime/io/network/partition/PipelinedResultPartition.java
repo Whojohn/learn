@@ -25,8 +25,10 @@ import org.apache.flink.util.function.SupplierWithException;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
-
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 
@@ -72,6 +74,14 @@ public class PipelinedResultPartition extends BufferWritingResultPartition
      */
     @GuardedBy("releaseLock")
     private int numberOfUsers;
+
+    private boolean iniAsyncBackground = true;
+    private Thread asyncThread;
+    private boolean flushStatista;
+    private Map<Integer, Integer> bufferStatista;
+    private final static int FLUSH_TIME = 2000;
+    private final static int ACTIVE_FLUSH_TASK_BACK_PRESSURED_TIME = 300;
+
 
     public PipelinedResultPartition(
             String owningTaskName,
@@ -202,5 +212,41 @@ public class PipelinedResultPartition extends BufferWritingResultPartition
     public void close() {
         decrementNumberOfUsers(PIPELINED_RESULT_PARTITION_ITSELF);
         super.close();
+        iniAsyncBackground = false;
+        asyncThread.interrupt();
+    }
+
+    public void iniEnv(int numberOfChannels){
+        bufferStatista = new HashMap<>(numberOfChannels);
+        asyncThread = new Thread(() -> {
+            try {
+                Long checkStartTime = System.currentTimeMillis();
+                while (iniAsyncBackground) {
+                    if (System.currentTimeMillis() - checkStartTime > FLUSH_TIME){
+                        bufferStatista.clear();
+                        checkStartTime = System.currentTimeMillis();
+                    }
+                    IntStream.range(0, numberOfChannels)
+                            .forEach(e ->
+                                    bufferStatista.put(e,
+                                            bufferStatista.getOrDefault(e, 0)
+                                                    + Math.max(subpartitions[e].getBuffersInBacklog(), 1)));
+                    if (getBackPressuredTimeMsPerSecond().getValue() > ACTIVE_FLUSH_TASK_BACK_PRESSURED_TIME){
+                        flushStatista = true;
+                    }
+                    Thread.sleep(ACTIVE_FLUSH_TASK_BACK_PRESSURED_TIME);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        asyncThread.start();
+    }
+
+    public Map<Integer, Integer> getBufferStatista() {
+        if (flushStatista) {
+            return bufferStatista;
+        }
+        return null;
     }
 }

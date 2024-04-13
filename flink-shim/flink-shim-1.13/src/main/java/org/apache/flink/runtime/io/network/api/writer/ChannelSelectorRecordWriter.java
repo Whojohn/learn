@@ -19,6 +19,8 @@
 package org.apache.flink.runtime.io.network.api.writer;
 
 import org.apache.flink.core.io.IOReadableWritable;
+import org.apache.flink.runtime.io.network.partition.PipelinedResultPartition;
+import org.apache.flink.streaming.runtime.partitioner.OptimizeShufflePartitioner;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -47,11 +49,22 @@ public final class ChannelSelectorRecordWriter<T extends IOReadableWritable>
 
         this.channelSelector = checkNotNull(channelSelector);
         this.channelSelector.setup(numberOfChannels);
+        iniShufflePartitioner();
+    }
+
+    private void iniShufflePartitioner() {
+        if (targetPartition instanceof PipelinedResultPartition) {
+            ((PipelinedResultPartition) targetPartition).iniEnv(numberOfChannels);
+        }
     }
 
     @Override
     public void emit(T record) throws IOException {
-        emit(record, channelSelector.selectChannel(record));
+        int targetChannel = channelSelector.selectChannel(record);
+        if (targetPartition instanceof PipelinedResultPartition && channelSelector instanceof OptimizeShufflePartitioner) {
+            ((OptimizeShufflePartitioner) channelSelector).setBufferStatista(((PipelinedResultPartition) targetPartition).getBufferStatista());
+        }
+        emit(record, targetChannel);
     }
 
     @Override
