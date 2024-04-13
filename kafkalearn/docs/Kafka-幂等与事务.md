@@ -16,8 +16,10 @@
 
 1. 幂等只能解决网络异常等问题，引发重试导致的数据重复问题。
 2. 事务能保证`Exactly once`，事务依赖于: 幂等(关闭幂等，事务会失败)。
-3. 幂等实现：``TransactionCoordinator`生成PID(Producer 唯一标识)，对比`PID`的`Sequence Number`实现。**注意 PID 由`Producer`生成，每个`Prodcuer`实例生成的`Pid`不唯一。**
-4. 事务实现：**生产者实现：**依赖`TransactionCoordinator` 协调事务管理，配合用户提供固定的`TransactionnalId`配合`epoch`控制单实例，`__transaction_state` 记录事务信息(`TransactionCoordinator` 和 `Leader`切换时提供恢复状态)，`LSO`控制事务机制下的最后可见数据，`Abort Transaction Index` 写入`abort范围数据`实现。**消费者实现** ：依赖于`LSO`，`Abort Transaction Index`实现。**注意区分 PID 和 ``TransactionnalId`。只有`TransactionnalId`才具有唯一性，才能实现生产者奔溃后，重启恢复上次的事务。`PID`在`Kafka`中只能解决幂等，但是`Kafka`中事务必须要求开启幂等。**
+3. 幂等实现：`TransactionCoordinator`生成PID(Producer 唯一标识)，对比`PID`的`Sequence Number`实现。**注意 PID  
+   由`Producer`生成，每个`Prodcuer`实例生成的`Pid`不唯一。`client`端每一条`record`都有一个`Sequence Number`.只要开启幂等，并且 
+   `MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION` 小于5 单个 partition 内数据是有序的。**
+4. 事务实现：**生产者实现**依赖`TransactionCoordinator` 协调事务管理，配合用户提供固定的`TransactionnalId`配合`epoch`控制单实例，`__transaction_state` 记录事务信息(`TransactionCoordinator` 和 `Leader`切换时提供恢复状态)，`LSO`控制事务机制下的最后可见数据，`Abort Transaction Index` 写入`abort范围数据`实现。**消费者实现** ：依赖于`LSO`，`Abort Transaction Index`实现。**注意区分 PID 和 ``TransactionnalId`。只有`TransactionnalId`才具有唯一性，才能实现生产者奔溃后，重启恢复上次的事务。`PID`在`Kafka`中只能解决幂等，但是`Kafka`中事务必须要求开启幂等。**
 5. 事务的状态： 对于外部`consumer`来说只有**`begin/end/abort`** 三种状态。内部来说，是`2pc`控制的。单个`TransactionId`同时只能有一个实例，假如多个实例，只有最后一个实例能够实例成功，`epoch`是用来控制实例并发，每一个新实例都会引发`epoch`加一。
 6. **生产者使用事务必须注意：`transaction.timeout.ms`期间内必须提交一次事务，不然会导致实例会话过期，无法进行任何操作。`transaction.timeout.ms` < `transaction.max.timeout.ms` **。`max.block.ms`可以控制`commit`等超时时长。
 7. 事务失败处理规则(**注意TransactionId不能改变**)：
