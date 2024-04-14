@@ -28,6 +28,7 @@ import javax.annotation.concurrent.GuardedBy;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
@@ -216,13 +217,13 @@ public class PipelinedResultPartition extends BufferWritingResultPartition
         asyncThread.interrupt();
     }
 
-    public void iniEnv(int numberOfChannels){
-        bufferStatista = new HashMap<>(numberOfChannels);
+    public void iniEnv(int numberOfChannels) {
+        bufferStatista = new ConcurrentHashMap<>(numberOfChannels);
         asyncThread = new Thread(() -> {
             try {
                 Long checkStartTime = System.currentTimeMillis();
                 while (iniAsyncBackground) {
-                    if (System.currentTimeMillis() - checkStartTime > FLUSH_TIME){
+                    if (System.currentTimeMillis() - checkStartTime > FLUSH_TIME) {
                         bufferStatista.clear();
                         checkStartTime = System.currentTimeMillis();
                     }
@@ -231,7 +232,7 @@ public class PipelinedResultPartition extends BufferWritingResultPartition
                                     bufferStatista.put(e,
                                             bufferStatista.getOrDefault(e, 0)
                                                     + Math.max(subpartitions[e].getBuffersInBacklog(), 1)));
-                    if (getBackPressuredTimeMsPerSecond().getValue() > ACTIVE_FLUSH_TASK_BACK_PRESSURED_TIME){
+                    if (getBackPressuredTimeMsPerSecond().getValue() > ACTIVE_FLUSH_TASK_BACK_PRESSURED_TIME) {
                         flushStatista = true;
                     }
                     Thread.sleep(ACTIVE_FLUSH_TASK_BACK_PRESSURED_TIME);
@@ -245,7 +246,7 @@ public class PipelinedResultPartition extends BufferWritingResultPartition
 
     public Map<Integer, Integer> getBufferStatista() {
         if (flushStatista) {
-            return bufferStatista;
+            return new HashMap<>(bufferStatista);
         }
         return null;
     }
