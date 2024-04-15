@@ -1,4 +1,7 @@
 # Flink 数据交换(网络)
+> reference:
+> https://blog.jrwang.me/2019/flink-source-code-data-exchange/#%E5%87%A0%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5
+> https://flink.apache.org/2019/06/05/a-deep-dive-into-flinks-network-stack/
 
 - 核心问题：
 
@@ -100,8 +103,12 @@
 > 5. https://blog.csdn.net/zhanglong_4444/article/details/117093830
 
 13. 网络流量控制协议
-
-> `Credit-based Flow Control`
+> 
+> - `Credit-based Flow Control` (走网络时候才有)
+> 1. 接收端向发送端声明可用的 Credit（一个buffer = 1个credit）；
+> 2. 当发送端获得了 X 点 Credit，表明它可以向网络中发送 X 个 buffer；当接收端分配了 X 点 Credit 给发送端，表明它有 X 个空闲的 buffer 可以接收数据
+> 3. 只有在 Credit > 0 的情况下发送端才发送 buffer；发送端每发送一个 buffer，Credit 也相应地减少一点
+> 4. 当发送端发送 buffer 的时候，它同样把当前堆积的 buffer 数量（backlog size）告知接收端；接收端根据发送端堆积的数量来申请 floating buffer
 
 ## FLink 传输底层
 
