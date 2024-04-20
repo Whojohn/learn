@@ -88,6 +88,8 @@ state.backend.rocksdb.block.cache-size: 32MB
           2.  `TaskManger`中的算子接收到了`Checkpoint`后(`Barrier`标识)，假如使用了`State`，则将当前的状态`Flush`到`State backend`中，成功后通知`TaskManger`写入成功(假如使用`Jobmanager`是`Ha`会把这个这个信息写入到如：`Zookeeper`，`etcd`中)， 并且向后依次传递`Barrier`标识，让下游算子完成持久化的过程。
           3.  重复执行以上步骤，当`Jobmanger`收到所有`TaskManager`通知`State`写入`State Backend`，此时`Checkpoint`完成。
 - 详细流程
+  ![数据流中的检查点Barrier](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_容错&checkpoint-checkpoint流程.svg?raw=true)
+
 ```text
 # checkpoint 中必须关注以下问题
 1. checkpoint 解决的问题？
