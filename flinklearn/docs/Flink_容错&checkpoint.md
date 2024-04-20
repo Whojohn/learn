@@ -13,6 +13,10 @@
 > https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/datastream/fault-tolerance/checkpointing/
 >
 > https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/ops/state/checkpoints/
+> 
+> https://flink-learning.org.cn/article/detail/3f84e0426f07485a813e5fd9730fc82e
+> 
+> https://blog.jrwang.me/2019/flink-source-code-checkpoint/#barrier-的流动
 
 
 
@@ -76,11 +80,47 @@ state.backend.rocksdb.block.cache-size: 32MB
 
 ![数据流中的检查点Barrier](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/Flink_容错&checkpoint-stream_barriers.svg?raw=true)
 
+- 简单流程
+          
          如上图所示，`Checkpoint` 整体控制流程由`Jobmanager`触发和最终确认提交。基础步骤如下：
     
           1.  `Checkpoint`机制由`Jobmanger`通过数据源中插入`barrier`标识。
           2.  `TaskManger`中的算子接收到了`Checkpoint`后(`Barrier`标识)，假如使用了`State`，则将当前的状态`Flush`到`State backend`中，成功后通知`TaskManger`写入成功(假如使用`Jobmanager`是`Ha`会把这个这个信息写入到如：`Zookeeper`，`etcd`中)， 并且向后依次传递`Barrier`标识，让下游算子完成持久化的过程。
           3.  重复执行以上步骤，当`Jobmanger`收到所有`TaskManager`通知`State`写入`State Backend`，此时`Checkpoint`完成。
+- 详细流程
+```text
+# checkpoint 中必须关注以下问题
+1. checkpoint 解决的问题？
+> 分布式容错。解决 sum += y 在流式计算下，如何容错，故障恢复的问题。把 sum 结果放入到 state 中，checkpoint 是为了定期对state 保存到一个地方，故障时候把state 从这个地方恢复回来。
+2. checkpoint 和 state 关系。
+> checkpoint 是为了持久化 state ，state 是为了保障数据恢复，记录; state 常见有: operator state, manager state (key state), raw state(基本用不到)，非对其checkpoint 产生的state 等；
+3. barrier 。
+> 可以理解为把无界流切分为有界流的手段。
+4. 2pc 。
+> 分布式快照核心，解决分布式事务问题。source transform sink 就是一个分布式事务。
+5. 同步过程和异步过程。
+> 提高checkpoint 效率，减少任务停顿。同步过程完成后，实际后续节点已经开始checkpoint 相关工作了。（同步阶段完成，就能继续工作了，只是可能会被下游堵塞住。）
+6. 与用户代码结合。
+> 同步与异步过程。
+> snapshot, notifyCheckpointComplete ;
+
+
+整体步骤
+1. jobmanger 中 CheckpointCoordinator 对 source 所在 taskmanager 通过 rpc 发起 trigger checkpoint event 操作。checkpoint 事件被投递到 
+source subtask mailbox 中。 
+2. source 所在的 subtask 检测到 checkpoint mail 事件， 先同步执行连接器代码中的，snapshot 方法。 执行然后，广播 checkpoint barrier 事件给下游数据流；同时异步将 
+state 物理快照上传到 hdfs ，并且把元信息，如state 文件写入的地址等信息告知 CheckpointCoordinator，这就是所谓的ack 。
+3. 中间处理算子接受到  barrier 事件，类似source 执行同步和异步处理过程。假如是 EXACTLY_ONCE 语义，并行度，混洗策略可能不一样，还需要等待上游所有的 barrier 到达后才能执行，这一操作叫做 
+barrier 对齐。
+4. sink 算子，接受到 barrier 事件，执行类似 source/中间算子操作。
+5. 当所有的sink source 中间算子 完成同步和异步操作，即收到所有算子的异步 ack，CheckpointCoordinator 判定分布式事务进入到 1pc 阶段。整个 checkpoint 可以认为成功，并且 
+CheckpointCoordinator 把所有 state 地址信息等元信息写入到 metadata 文件中。 CheckpointCoordinator 执行 2pc 操作，调用算子的 
+notifyCheckpointComplete 函数。至此整个流程完成。 
+
+
+```
+
+
 
 - Checkpoint 恢复
 
@@ -236,5 +276,12 @@ Phase 2 : Commit
 
 > 可以把2pc 阶段写统一外部源改为：先写外部文件，后写mysql。**这样做的缺点：假如mysql 插入失败，会导致任务一直卡在这个checkpoint 上不停重启。跟第一阶段失败不一样，改变了处理逻辑，也会卡住在这里。**
 
+## 5. checkpoint 问题分析
+- 按照 checkpoint 原理可以分为：
+1. 对齐慢，或者是收到第一个barrier 时间长。（
+> 表现：Alignment Duration（收到最后一个barrier和第一个barrier的耗时），Start Delay （收到第一个 barrier 时间）时间长。
+> 消费能力不足，可以通过调整 segment , 或者网络浮动缓解，但是根本原因是消费能力不足，上游数据不均匀等问题导致。
+2. 同步阶段慢。（用户代码问题+state 快照性能抖动，如rocksdb checkpoint 可能触发 compaction 等问题。）
+3. 异步阶段慢。（状态后端写入慢，写入并发不足）
 
 
