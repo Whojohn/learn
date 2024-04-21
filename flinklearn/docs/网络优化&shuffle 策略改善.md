@@ -45,6 +45,8 @@
 >
 > 2. 注意：这个代码修改方式基于 1.13 ，1.14后有通用异步线程。或者可以考虑，复用动态 network buffer 那一部分的metric 。(原生计算方式比较复杂)
 > 3. 具体代码见 Flink-learn#flink-shim-1.13#org.apache.flink 部分
+> 4. 测试代码见NetworkShufflePerformance。 
+> 5. 测试模拟的场景下，按照正常处理处理速度是 1w/s ，背压链路 1k/s，提高了 15%； 正常处理是 1w/s， 背压链路处理是 100 /s， 提高了70%；可以进一步优化代码，提高性能；
 
 **ChannelSelectorRecordWriter**
 

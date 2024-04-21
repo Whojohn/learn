@@ -12,15 +12,21 @@ import org.apache.flink.util.StringUtils;
 import java.time.Duration;
 import java.util.Random;
 
-public class Test {
-    private final static int LOOP_SIZE = 10000;
+public class NetworkShufflePerformance {
+    private final static int LOOP_SIZE = 20000;
 
     private final static int TEST_STRING_LENGTH = 1000;
 
+    private final static boolean OPTIMIZE_SHUFFLE = true;
+
     private static <T> DataStream<T> setOptimize(DataStream<T> stream) {
-        return new DataStream<T>(
-                stream.getExecutionEnvironment(),
-                new PartitionTransformation<>(stream.getTransformation(), new OptimizeShufflePartitioner<T>()));
+        if (OPTIMIZE_SHUFFLE) {
+            return new DataStream<>(
+                    stream.getExecutionEnvironment(),
+                    new PartitionTransformation<>(stream.getTransformation(), new OptimizeShufflePartitioner<>()));
+        } else {
+            return stream.rebalance();
+        }
     }
 
     public static void main(String[] args) throws Exception {
@@ -36,10 +42,10 @@ public class Test {
                 while (label) {
                     start += 1;
                     if (start < LOOP_SIZE) {
-                        Thread.sleep(1);
                         ctx.collect(testStr);
                     } else if (start == LOOP_SIZE) {
-                        System.out.println(System.currentTimeMillis() - startTime);
+                        System.out.println("Finish !!! cost time:   " + (System.currentTimeMillis() - startTime));
+                        System.exit(9);
                     } else {
                         Thread.sleep(Duration.ofSeconds(1).toMillis());
                     }
@@ -56,7 +62,7 @@ public class Test {
                     @Override
                     public String map(String s) throws Exception {
                         if (getRuntimeContext().getIndexOfThisSubtask() == 0) {
-                            Thread.sleep(Duration.ofMillis(20).toMillis());
+                            Thread.sleep(Duration.ofMillis(10).toMillis());
                         }
                         return null;
                     }
