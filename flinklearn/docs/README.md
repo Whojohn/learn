@@ -52,9 +52,13 @@
 -  [Flink(spark等计算集群日志采集).md](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink%20%E6%97%A5%E5%BF%97_%E7%BB%88%E6%9E%81%E8%A7%A3%E5%86%B3%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E9%97%AE%E9%A2%98.md)
 
 
+### 网络相关
 -  [Flink 数据交换(网络)](https://github.com/Whojohn/learn/tree/master/flinklearn/docs/Flink%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2(%E7%BD%91%E7%BB%9C).md)
 
+-  [网络优化&shuffle 策略改善](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96&shuffle%20%E7%AD%96%E7%95%A5%E6%94%B9%E5%96%84.md)
+
 -  [Flink 监控简述](https://github.com/Whojohn/learn/tree/master/flinklearn/docs/Flink%E7%9B%91%E6%8E%A7.md)
+
 
 -  [Flink sql state总结](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_sql_state_%E6%80%BB%E7%BB%93.md)
 

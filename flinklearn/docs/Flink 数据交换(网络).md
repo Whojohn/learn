@@ -59,7 +59,11 @@
 
 >- local buffer hash 的情况(没有hash，forward 的情况下是 channel = 1)
 >
->发送，接收内存总buffer：channel数(slot数) * `taskmanager.network.memory.buffers-per-channel` + `taskmanager.network.memory.floating-buffers-per-gate`   (对于网络来说发送端和接收段的区别是，发送端会分配所有buffer，接收端会有浮动和独占部分。)
+>发送，接收各自独立内存总buffer（发送，接收的buffer 一样存在buffer）：channel数(slot数) * `taskmanager.network.memory.buffers-per-channel` + 
+> `taskmanager.
+> network.
+> memory.
+> floating-buffers-per-gate`   (对于网络来说发送端和接收段的区别是，发送端会分配所有buffer，接收端会有浮动和独占部分。)
 >
 >| 参数                                                 | 含义                          | 默认值 |
 >| ---------------------------------------------------- | ----------------------------- | ------ |
