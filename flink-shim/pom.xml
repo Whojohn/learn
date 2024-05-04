@@ -12,6 +12,8 @@
     <modules>
         <module>flink-shim-1.12</module>
         <module>flink-shim-1.13</module>
+        <module>flink-shim-1.15</module>
+        <module>flink-shim-1.19</module>
     </modules>
 
     <artifactId>flink-shim</artifactId>

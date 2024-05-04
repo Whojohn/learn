@@ -40,17 +40,18 @@
 
 -  [Flink sql client流程(sql debug实现原理)](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink%20sql%20client%20%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90.md)
 
-
 -  [Flink_工作线程&mailbox并发控制](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B&mailbox%E6%9C%BA%E5%88%B6.md)
 
-
 -  [Flink HDFS 相关问题](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_HDFS%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98.md)
-
 
 -  [Flink on Yarn 日志-历史任务如何查看tm日志(yarn logs源码解析&问题解决)](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_on_Yarn%E6%97%A5%E5%BF%97_tm%E6%97%A5%E5%BF%97%E6%9F%A5%E7%9C%8B%E9%97%AE%E9%A2%98.md)
 
 -  [Flink(spark等计算集群日志采集).md](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink%20%E6%97%A5%E5%BF%97_%E7%BB%88%E6%9E%81%E8%A7%A3%E5%86%B3%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E9%97%AE%E9%A2%98.md)
 
+### state 相关
+-  [Flink sql state总结](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_sql_state_%E6%80%BB%E7%BB%93.md)
+
+-  [flink sla保障-状态问题-总结](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/sla%E4%BF%9D%E9%9A%9C-%E7%8A%B6%E6%80%81%E9%97%AE%E9%A2%98-%E6%80%BB%E7%BB%93.md)
 
 ### 网络相关
 -  [Flink 数据交换(网络)](https://github.com/Whojohn/learn/tree/master/flinklearn/docs/Flink%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2(%E7%BD%91%E7%BB%9C).md)
@@ -59,7 +60,6 @@
 
 -  [Flink 监控简述](https://github.com/Whojohn/learn/tree/master/flinklearn/docs/Flink%E7%9B%91%E6%8E%A7.md)
 
+### sql 底层
+- [Flink sql - Join存储&底层&常见问题分析](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink%20sql%20-%20Join存储&底层&常见问题分析.md)
 
--  [Flink sql state总结](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/Flink_sql_state_%E6%80%BB%E7%BB%93.md)
-
--  [sla保障-状态问题-总结](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/sla%E4%BF%9D%E9%9A%9C-%E7%8A%B6%E6%80%81%E9%97%AE%E9%A2%98-%E6%80%BB%E7%BB%93.md)
