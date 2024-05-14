@@ -22,9 +22,9 @@ import org.apache.flink.table.planner.plan.nodes.logical._
 import org.apache.flink.table.planner.plan.nodes.physical.common.CommonPhysicalLookupJoin
 import org.apache.flink.table.planner.plan.nodes.physical.stream.StreamPhysicalLookupJoin
 import org.apache.flink.table.planner.plan.rules.physical.common.{BaseSnapshotOnCalcTableScanRule, BaseSnapshotOnTableScanRule}
-
 import org.apache.calcite.plan.{RelOptRule, RelOptTable}
 import org.apache.calcite.rex.RexProgram
+import org.apache.flink.table.planner.plan.`trait`.FlinkRelDistribution
 
 /**
  * Rules that convert [[FlinkLogicalJoin]] on a [[FlinkLogicalSnapshot]]
@@ -74,7 +74,8 @@ object StreamPhysicalLookupJoinRule {
     val cluster = join.getCluster
 
     val providedTrait = join.getTraitSet.replace(FlinkConventions.STREAM_PHYSICAL)
-    val requiredTrait = input.getTraitSet.replace(FlinkConventions.STREAM_PHYSICAL)
+    var requiredTrait = input.getTraitSet.replace(FlinkConventions.STREAM_PHYSICAL)
+    requiredTrait = requiredTrait.replace(FlinkRelDistribution.hash(joinInfo.leftKeys))
 
     val convInput = RelOptRule.convert(input, requiredTrait)
     new StreamPhysicalLookupJoin(
