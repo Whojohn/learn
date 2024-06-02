@@ -26,3 +26,6 @@ https://github.com/Whojohn/learn/tree/master/flinklearn)
 
 - [Kafka](
   https://github.com/Whojohn/learn/tree/master/kafkalearn)  
+
+- [spark-sql](
+  https://github.com/Whojohn/learn/tree/master/docs/spark-sql)  
