@@ -276,15 +276,15 @@ Get -> memtable -> immutable -> sst per level
 
 **cache管理内存示意图**
 
-![rocksdb_cache管理内存示意图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/rocksdb_cache%E7%AE%A1%E7%90%86%E5%86%85%E5%AD%98%E7%A4%BA%E6%84%8F%E5%9B%BE.png?raw=true)
+![rocksdb_cache管理内存示意图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/rocksdb_Write%20buffer%20manager%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%A4%BA%E6%84%8F%E5%9B%BE.jpg?raw=true)
 
 **Write buffer manager 内存管理示意图**
 
-![Write buffer manager 内存管理示意图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/rocksdb_Write buffer manager 内存管理示意图.png?raw=true)
+![Write buffer manager 内存管理示意图](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/rocksdb_Write%20buffer%20manager%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%A4%BA%E6%84%8F%E5%9B%BE.jpg?raw=true)
 
 **write buffer manager arena block 底层（arena block -> 进一步拆分为 shard /dummy entry，物理分配最小单位，因此 arena block 不能小于 dummy entry 默认大小）**
 
-![rocksdb_writebuffer_manager arena block 底层](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/rocksdb_writebuffer_manager%20arena%20block%20%E5%BA%95%E5%B1%82.png?raw=true)
+![rocksdb_writebuffer_manager arena block 底层](https://github.com/Whojohn/learn/blob/master/flinklearn/docs/pic/rocksdb_writebuffer_manager%20arena%20block%20%E5%BA%95%E5%B1%82.jpg?raw=true)
 
 **总结**
 
