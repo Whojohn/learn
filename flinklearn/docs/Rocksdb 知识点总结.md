@@ -388,6 +388,27 @@ rocksdb = cache + iter
         = write buffer manager(write ratio*1.5) + read block cache + iter
         = cache + filter/index + iter
 ```
+#### flink 中 rocksdb 管理方式
 
+```
+用户代码如下：
+    transient ValueState<Tuple2<Long, Long>> sum;
+    transient MapStateDescriptor<Long, Long> calcute;
+    
+该算子并行度是4 用了 2个 tm ,每个 tm 2 slot 
+实际这个算子：4个 cf 在单个tm 中，假如使用了 timer 还会多2个；     
+```
+**总结：**
+1. rocksdb cf 个数=slot*state 个数
+2. **rocksdb 多个cf 中写入使用 write buffer manager ，使用的是同一个 `cache` 进行管理。读取也是通过 cache 管理，但是每一个 cf 都有单独的 cache。**
+```
+cf 读控制代码
+blockBasedTableConfig.setBlockCacheSize(
+                internalGetOption(RocksDBConfigurableOptions.BLOCK_CACHE_SIZE).getBytes());
+```
+3. **实际上，rocksdb 层面来说读也可以通过和写使用同一个cache 实例控制。**
+```text
+blockBasedTableConfig.setBlockCache()
+```
 
 
