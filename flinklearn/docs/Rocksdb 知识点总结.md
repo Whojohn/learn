@@ -260,7 +260,7 @@ Get -> memtable -> immutable -> sst per level
 
 2. 内存使用除了原生 `matric` 外，MemoryUtil#getApproximateMemoryUsageByType 也可以知道内存相关信息；
 
-3. `Rocksdb`默认不开启`cache`+ `write buffer manager` 情况下；内存使用与 max_write_buffer_number 和 db_write_buffer_size 有关；开启后，所有 `cf` 内存都受到 ``write buffer manager` 管理；
+3. `Rocksdb`默认不开启`cache`+ `write buffer manager` 情况下；内存使用与 max_write_buffer_number 和 db_write_buffer_size 以及`cf`个数有关；开启后，所有 `cf` 内存都受到 ``write buffer manager` 管理；
 
 4. **原生 `Rocksdb` 可以通过 `block cache(LRU/HyperClockCache)` + `write buffer manager` 控制读写内存；（不开启 `cache`，数据的读取会直接产生 io ，即只有 page cache **）
 
@@ -269,7 +269,6 @@ Get -> memtable -> immutable -> sst per level
 >reference :
 >
 > Flink 1.13，state backend 优化及生产实践分享    https://flink-learning.org.cn/article/detail/3d7ccd2f4d8800f748859ef6ba1e6b55?name=author&tab=9be7942c4f817a7f78fe58ad074021d9&page=xiangguanwenzhang
->
 >
 
 - Rocksdb cache 
@@ -327,7 +326,7 @@ glibc/jemalloc
 
 > 1. cache 内存分配层级已经很明确说明了和read 的分配区别，在于最小分配单位为 arena block size；
 > 2. 默认flink 没有开启严格内存限制，因为会导致 api 调用失败；
-> 3. 8.x writebuffer manger 有 wait stall 功能，应该能减少内存超用情况；
+> 3. 6.26 java api writebuffer manger 有 wait stall 功能，应该能减少内存超用情况；（flink 需要到8.x 系列 rocksdb 才可以）
 
 - flush 触发机制
 
@@ -339,6 +338,88 @@ glibc/jemalloc
 1. **arena block size 过大，会导致 memtable 提前 flush ，因为每一次分配内存都是记账方式（按照 block 大小记账，哪怕没用全），分配时候会触发检测。**
 2. **flink 中可以适当减少 arena block size，但是不要低于1mb，6.1 高版本后不要低于 256 kb；**
 
+- 注意
+
+1. **当同时使用setMinWriteBufferNumberToMerge 和 write buffer manager 时候，可能会导致write buffer manager 无法控制内存上限。(6.26 java api 允许 WriteBufferManager allowStall, 可以通过 allowStall 控制) **
+
+>  reference : https://github.com/facebook/rocksdb/pull/9076
+
+> 如：
+>
+> ```
+> 超过内存限制配置1
+> Cache cache = new LRUCache(MemorySize.parse("512mb").getBytes(), -1, false,0.1);
+> WriteBufferManager writeBufferManager = new WriteBufferManager(MemorySize.parse("256mb").getBytes(), cache);
+> setMinWriteBufferNumberToMerge(1).setMaxWriteBufferNumber(1)
+> !!! buffer size 过大导致的超用
+> setWriteBufferSize(MemorySize.parse("512mb")
+> 
+> 超过内存限制配置2
+> Cache cache = new LRUCache(MemorySize.parse("512mb").getBytes(), -1, false,0.1);
+> WriteBufferManager writeBufferManager = new WriteBufferManager(MemorySize.parse("256mb").getBytes(), cache);
+> !!! 
+> setMinWriteBufferNumberToMerge(6).setMaxWriteBufferNumber(8)
+> setWriteBufferSize(MemorySize.parse("64mb")
+> ```
+
+### Rocksdb 内存控制方法
+
+- 不使用 Writebuffer Manager
+
+> 总内存 =    Read Memory (默认带有8m cache) +  Memtables 
+>
+> =  total column family * (active +immutable) 
+>
+> flink 中= state number * tm-slot-number * max_write_buffer_number*db_write_buffer_size; 
+
+**注意：**
+
+1. **默认`sst`格式`blockformat`会自动配置一个8m的 `cache`。（setNoBlockCache 可以彻底关闭，不使用 cache 管理内存）  **
+2. **writebuffer manager 无法控制内存潜在风险。！！！（详细见write buffer manager 章节描述）**
+
+- Writebuffer manager + Block cache
+
+>  总内存 =  `block cache` + `Writebuffer Manager`
+
+  
+
+### Rocksdb 内存监控
+
+> reference :
+>
+> 读写相关计算方式： https://github.com/apache/spark/pull/35480
+>
+> db 级别支持的监控数据： https://github.com/facebook/rocksdb/blob/d6f265f9d6bd4ee3c5356b6e7b7f7e2f5e2ea716/include/rocksdb/db.h
+>
+> https://github.com/facebook/rocksdb/blob/073ac547391870f464fae324a19a6bc6a70188dc/db/internal_stats.cc
+>
+> 指标含义： https://gukaifeng.cn/posts/rocksdb-db-properties-zhong-de-shu-xing-xiang-jie/index.html
+>
+> https://github.com/facebook/rocksdb/wiki/Compaction-Stats-and-DB-Status
+
+```
+api 调用方式
+db.getProperty("rocksdb.cur-size-all-mem-tables")
+
+写入内存监控：
+总写入内存：rocksdb.cur-size-all-mem-tables （是否开启 writebuffer manager 写入内存都可以这样去监控）
+
+读相关内存监控：
+block cache配置大小：block-cache-capacity 
+block cache读取内存：rocksdb.block-cache-usage （当没有显式生命关闭 cache 时候，包括迭代对象所占用的内存）
+迭代内存：rocksdb.block-cache-pinned-usage （rocksdb.block-cache-usage 包含这一部分内存）
+读取sst 文件使用的内存： rocksdb.estimate-table-readers-mem（不包括 block cache 使用的内存）
+
+compaciton 监控：
+rocksdb.estimate-pending-compaction-bytes （对 level-based 以外的其他压缩无效？？？不确定）
+
+
+```
+
+
+
+
+
 ### Flink 中的 Rocksdb 内存管理
 
 - 1.10 or 以后版本内存分配情况
@@ -347,17 +428,10 @@ glibc/jemalloc
 2. 使用 state.backend.rocksdb.memory.fixed-per-slot/state.backend.rocksdb.memory.fixed-per-tm ；
 3. disable manager && not use per-slot/per-tm
 
-> 情况 12 都会使用 cache 管理内存
->
-> 总内存 =  `block cache` （memtable for write+sst block for read）+ `Indexes and bloom filters`(假如开启对应特性，注意，这一部分的内存不能被回收，默认配置下！！！)+`Blocks pinned by iterators`;
+> 情况 12 都会使用 cache 管理内存，特别的 Flink 把 writebuffer manager 和读使用的 cache 分开。
 >
 > 情况 3 不会管理内存
 >
-> 总内存 =    Read Memory +  Memtables 
->
-> =  total column family * (active +immutable) 
->
-> = state number * tm-slot-number * max_write_buffer_number*db_write_buffer_size;  (无法控制)
 
 - flink 针对 Rocksdb 内存计算方式
 
@@ -388,7 +462,9 @@ rocksdb = cache + iter
         = write buffer manager(write ratio*1.5) + read block cache + iter
         = cache + filter/index + iter
 ```
-#### flink 中 rocksdb 管理方式
+
+
+#### Flink 中使用 rocksdb 管理方式
 
 ```
 用户代码如下：
@@ -410,5 +486,4 @@ blockBasedTableConfig.setBlockCacheSize(
 ```text
 blockBasedTableConfig.setBlockCache()
 ```
-
 
