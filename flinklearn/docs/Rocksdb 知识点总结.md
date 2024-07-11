@@ -343,7 +343,7 @@ glibc/jemalloc
 
 - 注意
 
-1. **当同时使用setMinWriteBufferNumberToMerge 和 write buffer manager 时候，可能会导致write buffer manager 无法控制内存上限。(6.26 java api 允许 WriteBufferManager allowStall, 可以通过 allowStall 控制) **
+1. **当使用!!!批量插入WriteBatch接口时候!!! ，当同时使用setMinWriteBufferNumberToMerge 和 write buffer manager 时候，可能会导致write buffer manager 无法控制内存上限。(6.26 java api 允许 WriteBufferManager allowStall, 可以通过 allowStall 控制) ！！！注意单独使用 put 接口不会！！！ **
 
 >  reference : https://github.com/facebook/rocksdb/pull/9076
 
