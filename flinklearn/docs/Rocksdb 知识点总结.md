@@ -329,9 +329,12 @@ glibc/jemalloc
 > 3. 6.26 java api writebuffer manger 有 wait stall 功能，应该能减少内存超用情况；（flink 需要到8.x 系列 rocksdb 才可以）
 
 - flush 触发机制
+> reference :
+> https://github.com/facebook/rocksdb/blob/22fe23edc89e9842ed72b613de172cd80d3b00da/include/rocksdb/write_buffer_manager.h#L101
 
-1. 当已用内存达到总内存的 7/8 时，**触发 flush ；**（rocksdb 文档写的是 90% ，实际代码是 7/8）
-2. 总 cache 内存超用，且memtable 内存大小超过 50% write buffer 限制，**触发 flush ；**；
+**！！！注意下面说的内存控制逻辑并不是真正的总内存控制，而是 mutable inmutable 内存，需要严格控制总内存，只有 waitstall = true才可以！！！**
+1. 当 mutable 达到 wbm size 的 7/8 时，**触发 flush ；**（rocksdb 文档写的是 90% ，实际代码是 7/8）
+2. 总 cache 内存超用，且 memtable 内存大小超过 50% write buffer 限制，**触发 flush ；**
 
 - arena block
 
