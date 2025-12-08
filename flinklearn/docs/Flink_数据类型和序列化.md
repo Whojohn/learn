@@ -127,7 +127,7 @@ public class MyPojo {
 public class MyTupleTypeInfoFactory extends TypeInfoFactory<MyTuple> {
 
   @Override
-  public TypeInformation<MyTuple> createTypeInfo(Type t, Map<String, TypeInformation<?>> genericParameters) {
+  public TypeInformation<MyTuple> createTypeInfo(Test t, Map<String, TypeInformation<?>> genericParameters) {
     return new MyTupleTypeInfo(genericParameters.get("T0"), genericParameters.get("T1"));
   }
 }

@@ -12,9 +12,9 @@ https://github.com/Whojohn/AndroidAllGuide/blob/master/java/%E9%87%8D%E6%8B%BEJa
 
 ```
 # 核心知识点
-1. Java 中只有基本数据类型，引用类型这两种数据类型。
+1. Java 中只有基本数据类型(Primitive Data Types)，引用类型(Reference Data Types)这两种数据类型。
 2. temp = temp + 2 在java中2是数字常量，是 int 类型(假如是2.2则是 double 类型)，因此与更低精度的数值类型运算，必须强制转换数据类型。 
-3. 在类变量中，变量的为类的默认值： null; 基础数据类型默认值:false、0、0.0, \u0000(ps：类属性指的是可以get set的变量，变量则可以没有get set方法。)；
+3. 类的默认值： null; 基础数据类型默认值:false、0、0.0, \u0000(ps：类属性指的是可以get set的变量，变量则可以没有get set方法。)；
 4. 在类变量中，使用包装类更符合实际要求(基础数据类型拥有默认值，只有类才能表达Null)。
 5. 基础数据类型(primitives type)是存放在栈中。引用类型是存放在堆中，包括包装类的常量池也存放在堆中。
 ```
