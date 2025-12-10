@@ -13,7 +13,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <flink.version>1.13.6</flink.version>
+        <flink.version>1.13.5</flink.version>
         <scala.binary.version>2.12</scala.binary.version>
         <kafka.version>2.4.1</kafka.version>
         <hadoop.version>3.1.3</hadoop.version>
@@ -68,19 +68,12 @@
     <dependencies>
         <dependency>
             <groupId>org.example</groupId>
-            <artifactId>flink-shim-1.13</artifactId>
+            <artifactId>flink-shim-1.17</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
 
-        <!-- 本地测试配置，将会显示flink 框架日志-->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.powermock</groupId>
@@ -96,38 +89,20 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- flink json format -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-json</artifactId>
-            <version>${flink.version}</version>
-        </dependency>
 
-        <!-- flink kafka universal -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>${kafka.version}</version>
-        </dependency>
-
-       <!-- 日志修改样例        -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.12.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.12.1</version>
-            <scope>provided</scope>
-        </dependency>
+<!--       &lt;!&ndash; 日志修改样例        &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.logging.log4j</groupId>-->
+<!--            <artifactId>log4j-api</artifactId>-->
+<!--            <version>2.12.1</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.logging.log4j</groupId>-->
+<!--            <artifactId>log4j-core</artifactId>-->
+<!--            <version>2.12.1</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
 
 
 
@@ -137,11 +112,18 @@
         <profile>
             <id>mac</id>
             <dependencies>
+                <dependency>
+                    <groupId>org.rocksdb</groupId>
+                    <artifactId>rocksdbjni</artifactId>
+                    <version>8.10.0</version>
+                    <scope>provided</scope>
+                </dependency>
+
                 <!-- rocksdb -->
                 <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-statebackend-rocksdb -->
                 <dependency>
                     <groupId>org.apache.flink</groupId>
-                    <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+                    <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
                     <version>${flink.version}</version>
                     <scope>provided</scope>
                     <exclusions>
@@ -152,12 +134,7 @@
                     </exclusions>
                 </dependency>
 
-                <dependency>
-                    <groupId>com.ververica</groupId>
-                    <artifactId>frocksdbjni</artifactId>
-                    <version>6.20.3-ververica-2.0</version>
-                    <scope>provided</scope>
-                </dependency>
+
             </dependencies>
         </profile>
         <profile>
@@ -167,7 +144,7 @@
                 <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-statebackend-rocksdb -->
                 <dependency>
                     <groupId>org.apache.flink</groupId>
-                    <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+                    <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
                     <version>${flink.version}</version>
                     <scope>provided</scope>
                 </dependency>

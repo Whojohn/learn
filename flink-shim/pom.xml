@@ -13,7 +13,7 @@
         <module>flink-shim-1.12</module>
         <module>flink-shim-1.13</module>
         <module>flink-shim-1.15</module>
-        <module>flink-shim-1.19</module>
+        <module>flink-shim-1.17</module>
     </modules>
 
     <artifactId>flink-shim</artifactId>
@@ -25,16 +25,7 @@
         <java.version>1.8</java.version>
         <flink.version>1.12.4</flink.version>
         <scala.binary.version>2.12</scala.binary.version>
+        <kafka.version>2.4.1</kafka.version>
     </properties>
 
-    <dependencies>
-        <!-- 本地测试配置，将会显示flink 框架日志-->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
-            <scope>provided</scope>
-        </dependency>
-
-    </dependencies>
 </project>
