@@ -128,12 +128,12 @@ public class VisitorTableName extends SqlBasicVisitor<Set<String>> {
 
     private void visitBasiccall(SqlBasicCall sqlcall) {
         if (sqlcall.getOperator() instanceof SqlInOperator) {
-            sqlcall.operands[1].accept(this);
+            sqlcall.getOperandList().get(1).accept(this);
         } else if (sqlcall.getOperator() instanceof SqlAsOperator) {
-            (sqlcall).operands[0].accept(this);
+            (sqlcall).getOperandList().get(0).accept(this);
             return;
         }
-        Arrays.stream((sqlcall).operands).forEach(e -> e.accept(this));
+        Arrays.stream((sqlcall).getOperandList().toArray(new SqlNode[0])).forEach(e -> e.accept(this));
     }
 }
 
