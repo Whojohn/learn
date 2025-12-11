@@ -70,5 +70,24 @@
 
 ### sql-calcite
 -  [calcite](../docs/sql/Flink_Sql_calcite.md)
+> 隐式转化，语法标准(<> 兼容 !=实现)
+
+
+### sql-功能
+- [bitmap](../docs/sql/Flink_Sql_bitmap.md)
+> 去重（uv）; 数据乱序情况下，一个订单不同状态的uv；
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

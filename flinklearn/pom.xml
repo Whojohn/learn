@@ -89,6 +89,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
 
 <!--       &lt;!&ndash; 日志修改样例        &ndash;&gt;-->
 <!--        <dependency>-->
@@ -123,7 +129,7 @@
                 <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-statebackend-rocksdb -->
                 <dependency>
                     <groupId>org.apache.flink</groupId>
-                    <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
+                    <artifactId>flink-statebackend-rocksdb_2.12</artifactId>
                     <version>${flink.version}</version>
                     <scope>provided</scope>
                     <exclusions>
@@ -135,6 +141,8 @@
                 </dependency>
 
 
+
+
             </dependencies>
         </profile>
         <profile>
@@ -144,7 +152,7 @@
                 <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-statebackend-rocksdb -->
                 <dependency>
                     <groupId>org.apache.flink</groupId>
-                    <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
+                    <artifactId>flink-statebackend-rocksdb_2.12</artifactId>
                     <version>${flink.version}</version>
                     <scope>provided</scope>
                 </dependency>
